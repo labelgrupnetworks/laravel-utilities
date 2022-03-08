@@ -9,7 +9,7 @@ class $CLASS_NAME$ extends \Labelgrup\LaravelUtilities\Core\Requests\ApiRequest
 	 *
 	 * @return bool
 	 */
-	public function authorize()
+	public function authorize(): bool
 	{
 		return false;
 	}
@@ -19,7 +19,7 @@ class $CLASS_NAME$ extends \Labelgrup\LaravelUtilities\Core\Requests\ApiRequest
 	 *
 	 * @return array
 	 */
-	public function rules()
+	public function rules(): array
 	{
 		return [
 			//
