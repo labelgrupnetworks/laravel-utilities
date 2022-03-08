@@ -12,7 +12,7 @@ class MakeUseCase extends \Labelgrup\LaravelUtilities\Core\Commands\GeneratorCom
 
     protected function getStub(): string
     {
-        return $this->resolveStubPath('/stubs/use.case.stub');
+        return $this->resolveStubPath(__DIR__ . '/../stubs/use.case.stub');
     }
 
     protected function getDefaultNamespace($rootNamespace): string
