@@ -7,6 +7,7 @@ class LaravelUtilitiesServiceProvider extends \Illuminate\Support\ServiceProvide
     public function boot(): void
     {
         $this->commands([
+            \Labelgrup\LaravelUtilities\Commands\MakeApiRequest::class,
             \Labelgrup\LaravelUtilities\Commands\MakeUseCase::class
         ]);
     }
