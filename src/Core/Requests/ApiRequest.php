@@ -1,6 +1,6 @@
 <?php
 
-namespace Labelgrup\LaravelUtilities\Requests;
+namespace Labelgrup\LaravelUtilities\Core\Requests;
 
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Labelgrup\LaravelUtilities\Helpers\ApiResponse;
