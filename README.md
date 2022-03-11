@@ -10,10 +10,22 @@ A collection of utilities to Laravel projects. This package
 > Require a token access to install
 
 ## Installation
-```bash
-composer require labelgrup/laravel-utilities
+Add this repository in your <strong>composer.json</strong>
+```json
+"repositories": [  
+    {  
+        "type": "vcs",  
+        "url": "https://github.com/erojaslabelgrup/laravel-utilities"  
+    }  
+]
 ```
-This package will be constantly updated. If you want to update the package to have the latest version:
+After install your composer dependencies.
+```bash
+composer install
+```
+Composer will require an access token to install the dependency, write it down if you already have one.
+
+>This package will be constantly updated. If you want to update the package to have the latest version:
 ```bash
 composer update labelgrup/laravel-utilities
 ```
