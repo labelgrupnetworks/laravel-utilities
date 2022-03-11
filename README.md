@@ -11,12 +11,12 @@ A collection of utilities to Laravel projects. This package
 
 ## Installation
 Add this repository in your <strong>composer.json</strong>
-```json
+```bash
 "repositories": [
-{
-"type": "vcs",
-"url": "https://github.com/labelgrupnetworks/laravel-utilities"
-}
+  {
+    "type": "vcs",
+    "url": "https://github.com/labelgrupnetworks/laravel-utilities"
+  }
 ]
 ```
 After install your composer dependencies.
