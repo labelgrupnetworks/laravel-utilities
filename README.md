@@ -1,6 +1,5 @@
 
-# Laravel utilities
-<img src="https://img.shields.io/badge/repository-private-blue.svg?logo=LOGO">
+# Laravel utilities <img src="https://img.shields.io/badge/repository-private-blue.svg?logo=LOGO">
 
 A collection of utilities to Laravel projects. This package
 
@@ -12,11 +11,11 @@ A collection of utilities to Laravel projects. This package
 ## Installation
 Add this repository in your <strong>composer.json</strong>
 ```bash
-"repositories": [
-  {
-    "type": "vcs",
-    "url": "https://github.com/labelgrupnetworks/laravel-utilities"
-  }
+"repositories": [  
+    {  
+        "type": "vcs",  
+        "url": "https://github.com/labelgrupnetworks/laravel-utilities"  
+    }  
 ]
 ```
 After install your composer dependencies.
