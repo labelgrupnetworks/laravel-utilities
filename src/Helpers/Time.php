@@ -4,7 +4,7 @@ namespace Labelgrup\LaravelUtilities\Helpers;
 
 class Time
 {
-    public static function parseTimeFormHumans(
+    public static function parseTimeForHumans(
         int $inputSeconds,
         string $unitMin = 's'
     ): string
