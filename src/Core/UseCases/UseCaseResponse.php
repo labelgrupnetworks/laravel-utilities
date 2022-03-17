@@ -57,9 +57,21 @@ class UseCaseResponse
     public function responseToApi (): \Illuminate\Http\JsonResponse
     {
         if ( !$this->success ) {
-            return ApiResponse::fail($this->message, $this->data, $this->code);
+            return ApiResponse::fail(
+                $this->message,
+                is_array($this->data)
+                    ? $this->data
+                    : ['errors' => $this->data],
+                $this->code
+            );
         }
 
-        return ApiResponse::done($this->message, $this->data, $this->code);
+        return ApiResponse::done(
+            $this->message,
+            is_array($this->data)
+                ? $this->data
+                : ['data' => $this->data],
+            $this->code
+        );
     }
 }
