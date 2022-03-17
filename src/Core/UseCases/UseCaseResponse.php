@@ -3,6 +3,7 @@
 namespace Labelgrup\LaravelUtilities\Core\UseCases;
 
 use Labelgrup\LaravelUtilities\Helpers\ApiResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class UseCaseResponse
 {
@@ -56,13 +57,15 @@ class UseCaseResponse
 
     public function responseToApi (): \Illuminate\Http\JsonResponse
     {
+        $code = array_key_exists($this->code, Response::$statusTexts) ? $this->code : Response::HTTP_INTERNAL_SERVER_ERROR;
+
         if ( !$this->success ) {
             return ApiResponse::fail(
                 $this->message,
                 is_array($this->data)
                     ? $this->data
                     : ['errors' => $this->data],
-                $this->code
+                $code
             );
         }
 
@@ -71,7 +74,7 @@ class UseCaseResponse
             is_array($this->data)
                 ? $this->data
                 : ['data' => $this->data],
-            $this->code
+            $code
         );
     }
 }
