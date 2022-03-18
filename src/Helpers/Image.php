@@ -2,7 +2,9 @@
 
 namespace Labelgrup\LaravelUtilities\Helpers;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Image
 {
@@ -47,5 +49,15 @@ class Image
 
         Storage::put($fileName, $contents);
         curl_close($ch);
+    }
+
+    public static function store(
+        UploadedFile $image,
+        string $folder = '',
+        string $disk = null
+    ): string
+    {
+        $imageName = Str::random(30) . '.' . $image->extension();
+        return $image->storeAs($folder, $imageName, $disk ? ['disk' => $disk] : []);
     }
 }
