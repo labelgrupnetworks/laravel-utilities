@@ -54,10 +54,16 @@ class Image
     public static function store(
         UploadedFile $image,
         string $folder = '',
-        string $disk = null
+        string $disk = null,
+        string $file_name = null
     ): string
     {
-        $imageName = Str::random(30) . '.' . $image->extension();
-        return $image->storeAs($folder, $imageName, $disk ? ['disk' => $disk] : []);
+        return $image->storeAs(
+            $folder,
+            $file_name ?? Str::random(30) . '.' . $image->extension(),
+            $disk
+                ? ['disk' => $disk]
+                : []
+        );
     }
 }
