@@ -12,7 +12,10 @@ abstract class UseCase implements UseCaseInterface
             $response = $this->action();
             return $this->success(__('Action has been finished'), $response);
         } catch ( \Throwable $exception ) {
-            return $this->fail(__($exception->getMessage()), $exception->getTrace(), $exception->getCode());
+            $code = array_key_exists($exception->getCode(), Response::$statusTexts)
+                ? $exception->getCode()
+                : Response::HTTP_INTERNAL_SERVER_ERROR;
+            return $this->fail(__($exception->getMessage()), $exception->getTrace(), $code);
         }
     }
 
