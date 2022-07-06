@@ -6,7 +6,6 @@ A collection of utilities to Laravel projects. This package
 ## Requirements
 - PHP ^8.0
 - Laravel ^9.2
-> Require a token access to install
 
 ## Installation
 Add this repository in your <strong>composer.json</strong>
@@ -132,10 +131,22 @@ public static function downloadFromUrl(
 ### Password
 This class facilitates some actions with passwords.
 ```php
-// Get secure rules to passwords
+// Get secure rules for passwords
 public static function rule(
-	int $min_size = 8
+	int $min_size = self::PASSWORD_LENGTH
 ): \Illuminate\Validation\Rules\Password
+
+// Generate a secure and unleaked password
+public static function generateSecurePassword(
+    int $length = self::PASSWORD_LENGTH,
+    int $max_retries = self::MAX_RETRIES
+): string
+
+// Checks if the given password is already leaked
+public static function isLeakedPassword(
+    string $password
+): bool
+
 ```
 ### Text
 This class facilitates some actions on texts.

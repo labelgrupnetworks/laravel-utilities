@@ -4,6 +4,11 @@ namespace Labelgrup\LaravelUtilities\Helpers;
 
 class Time
 {
+    /**
+     * @param int $inputSeconds
+     * @param string $unitMin
+     * @return string
+     */
     public static function parseTimeForHumans(
         int $inputSeconds,
         string $unitMin = 's'
@@ -15,14 +20,12 @@ class Time
 
         // extract days
         $days = floor($inputSeconds / $secondsInADay);
-
         // extract hours
         $hourSeconds = $inputSeconds % $secondsInADay;
         $hours = floor($hourSeconds / $secondsInAnHour) + ($days * 24);
         // extract minutes
         $minuteSeconds = $hourSeconds % $secondsInAnHour;
         $minutes = floor($minuteSeconds / $secondsInAMinute);
-
         // extract the remaining seconds
         $remainingSeconds = $minuteSeconds % $secondsInAMinute;
         $seconds = ceil($remainingSeconds);

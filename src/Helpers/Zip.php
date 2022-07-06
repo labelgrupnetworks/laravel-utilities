@@ -6,6 +6,11 @@ use ZipArchive;
 
 class Zip
 {
+    /**
+     * @param string $zipFile
+     * @param string $sourcePath
+     * @return string|null
+     */
     public static function create(
         string $zipFile,
         string $sourcePath
@@ -22,6 +27,12 @@ class Zip
         return $zipFile;
     }
 
+    /**
+     * @param string $folder
+     * @param ZipArchive $zipFile
+     * @param int $exclusiveLength
+     * @return void
+     */
     private static function folderToZip(
         string $folder,
         ZipArchive &$zipFile,

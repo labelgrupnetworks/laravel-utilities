@@ -4,6 +4,11 @@ namespace Labelgrup\LaravelUtilities\Helpers;
 
 class Text
 {
+    /**
+     * @param string $text
+     * @param string $divider
+     * @return string
+     */
     public static function sanitize(
         string $text,
         string $divider = '-'
