@@ -8,10 +8,13 @@ use Illuminate\Support\Str;
 
 class Image
 {
+    /**
+     * @param string $url
+     * @return string|null
+     */
     public static function getExtensionImageFromUrl(string $url): ?string
     {
         $urlData = parse_url($url);
-
         if (!array_key_exists('path', $urlData)) {
             return null;
         }
@@ -19,6 +22,10 @@ class Image
         return pathinfo($urlData['path'], PATHINFO_EXTENSION);
     }
 
+    /**
+     * @param string $src
+     * @return bool
+     */
     public static function destroy(
         string $src
     ): bool
@@ -31,6 +38,11 @@ class Image
         return true;
     }
 
+    /**
+     * @param string $url
+     * @param string $fileName
+     * @return void
+     */
     public static function downloadFromUrl(
         string $url,
         string $fileName
@@ -51,6 +63,13 @@ class Image
         curl_close($ch);
     }
 
+    /**
+     * @param UploadedFile $image
+     * @param string $folder
+     * @param string|null $disk
+     * @param string|null $file_name
+     * @return string
+     */
     public static function store(
         UploadedFile $image,
         string $folder = '',

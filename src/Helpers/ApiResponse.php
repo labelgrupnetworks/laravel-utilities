@@ -7,6 +7,12 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ApiResponse
 {
+    /**
+     * @param string $message
+     * @param array $data
+     * @param int $code
+     * @return JsonResponse
+     */
     public static function done(
         string $message,
         array $data = [],
@@ -24,6 +30,12 @@ class ApiResponse
         return self::response($responseData, $code);
     }
 
+    /**
+     * @param string $message
+     * @param array $errors
+     * @param int $code
+     * @return JsonResponse
+     */
     public static function fail(
         string $message,
         array $errors = [],
@@ -41,6 +53,12 @@ class ApiResponse
         return self::response($responseData, $code);
     }
 
+    /**
+     * @param \Illuminate\Pagination\LengthAwarePaginator $list
+     * @param $instanceResource
+     * @param ...$instanceParams
+     * @return array
+     */
     public static function parsePagination(
         \Illuminate\Pagination\LengthAwarePaginator $list,
         $instanceResource = null,
@@ -63,6 +81,11 @@ class ApiResponse
         ];
     }
 
+    /**
+     * @param array $data
+     * @param int $code
+     * @return JsonResponse
+     */
     public static function response (
         array $data,
         int $code
