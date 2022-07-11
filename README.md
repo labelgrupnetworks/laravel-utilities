@@ -1,5 +1,5 @@
 
-# Laravel utilities <img src="https://img.shields.io/badge/repository-private-blue.svg?logo=LOGO">
+# Laravel utilities <img src="https://img.shields.io/badge/repository-public-green.svg?logo=LOGO">
 
 A collection of utilities to Laravel projects. This package
 
