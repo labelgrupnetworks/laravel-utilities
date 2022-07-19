@@ -21,6 +21,10 @@ class Time
         string $unitMin = 's'
     ): string
     {
+        if (!array_key_exists($unitMin, self::SECONDS_IN_TIME)) {
+            throw new \InvalidArgumentException(__('Invalid unitMin'));
+        }
+
         // extract weeks
         $weekSeconds = $inputSeconds % self::SECONDS_IN_TIME['w'];
         $weeks = floor($inputSeconds / self::SECONDS_IN_TIME['w']);
@@ -64,25 +68,25 @@ class Time
 
     public static function convertTime(
         int $time,
-        string $unit_from,
-        string $unit_to
+        string $unitFrom,
+        string $unitTo
     ): float
     {
-        if (!array_key_exists($unit_from, self::SECONDS_IN_TIME)) {
-            throw new \InvalidArgumentException(__('Invalid unit_from'));
+        if (!array_key_exists($unitFrom, self::SECONDS_IN_TIME)) {
+            throw new \InvalidArgumentException(__('Invalid unitFrom'));
         }
 
-        if (!array_key_exists($unit_to, self::SECONDS_IN_TIME)) {
-            throw new \InvalidArgumentException(__('Invalid unit_to'));
+        if (!array_key_exists($unitTo, self::SECONDS_IN_TIME)) {
+            throw new \InvalidArgumentException(__('Invalid unitTo'));
         }
 
         $time_from = $time;
 
-        if ($unit_from === $unit_to) {
+        if ($unitFrom === $unitTo) {
             return $time_from;
         }
 
-        $time_from *= self::SECONDS_IN_TIME[$unit_from];
-        return $time_from / self::SECONDS_IN_TIME[$unit_to];
+        $time_from *= self::SECONDS_IN_TIME[$unitFrom];
+        return $time_from / self::SECONDS_IN_TIME[$unitTo];
     }
 }
