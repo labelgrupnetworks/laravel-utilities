@@ -4,6 +4,13 @@ namespace Labelgrup\LaravelUtilities\Helpers;
 
 class Time
 {
+    public const SECONDS_IN_TIME = [
+        'i' => 60,
+        'h' => 3600,
+        'd' => 86400,
+        'w' => 604800
+    ];
+
     /**
      * @param int $inputSeconds
      * @param string $unitMin
@@ -14,25 +21,20 @@ class Time
         string $unitMin = 's'
     ): string
     {
-        $secondsInAMinute = 60;
-        $secondsInAnHour = 60 * $secondsInAMinute;
-        $secondsInADay = 24 * $secondsInAnHour;
-        $secondsInAWeek = 7 * $secondsInADay;
-
         // extract weeks
-        $weekSeconds = $inputSeconds % $secondsInAWeek;
-        $weeks = floor($inputSeconds / $secondsInAWeek);
+        $weekSeconds = $inputSeconds % self::SECONDS_IN_TIME['w'];
+        $weeks = floor($inputSeconds / self::SECONDS_IN_TIME['w']);
         // extract days
-        $daySeconds = $weekSeconds % $secondsInAWeek;
-        $days = floor($daySeconds / $secondsInADay);
+        $daySeconds = $weekSeconds % self::SECONDS_IN_TIME['w'];
+        $days = floor($daySeconds / self::SECONDS_IN_TIME['d']);
         // extract hours
-        $hourSeconds = $daySeconds % $secondsInADay;
-        $hours = floor($hourSeconds / $secondsInAnHour) + ($days * 24);
+        $hourSeconds = $daySeconds % self::SECONDS_IN_TIME['d'];
+        $hours = floor($hourSeconds / self::SECONDS_IN_TIME['h']) + ($days * 24);
         // extract minutes
-        $minuteSeconds = $hourSeconds % $secondsInAnHour;
-        $minutes = floor($minuteSeconds / $secondsInAMinute);
+        $minuteSeconds = $hourSeconds % self::SECONDS_IN_TIME['h'];
+        $minutes = floor($minuteSeconds / self::SECONDS_IN_TIME['i']);
         // extract the remaining seconds
-        $remainingSeconds = $minuteSeconds % $secondsInAMinute;
+        $remainingSeconds = $minuteSeconds % self::SECONDS_IN_TIME['i'];
         $seconds = ceil($remainingSeconds);
 
         $timeForHumans = '';
@@ -58,5 +60,29 @@ class Time
         }
 
         return $timeForHumans;
+    }
+
+    public static function convertTime(
+        int $time,
+        string $unit_from,
+        string $unit_to
+    ): float
+    {
+        if (!array_key_exists($unit_from, self::SECONDS_IN_TIME)) {
+            throw new \InvalidArgumentException(__('Invalid unit_from'));
+        }
+
+        if (!array_key_exists($unit_to, self::SECONDS_IN_TIME)) {
+            throw new \InvalidArgumentException(__('Invalid unit_to'));
+        }
+
+        $time_from = $time;
+
+        if ($unit_from === $unit_to) {
+            return $time_from;
+        }
+
+        $time_from *= self::SECONDS_IN_TIME[$unit_from];
+        return $time_from / self::SECONDS_IN_TIME[$unit_to];
     }
 }
