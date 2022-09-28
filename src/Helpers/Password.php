@@ -12,10 +12,10 @@ class Password
      * @return \Illuminate\Validation\Rules\Password
      * @throws \Exception
      */
-    public static function rule(int $min_size = 8): \Illuminate\Validation\Rules\Password
+    public static function rule(int $min_size = self::PASSWORD_LENGTH): \Illuminate\Validation\Rules\Password
     {
         if ( $min_size < self::PASSWORD_LENGTH ) {
-            throw new \Exception(__("Password doesn't meet minimal length requirement"));
+            throw new \RuntimeException(__("Password doesn't meet minimal length requirement"));
         }
 
         return \Illuminate\Validation\Rules\Password::min($min_size)
@@ -53,7 +53,7 @@ class Password
         }
 
         if ($retries >= self::MAX_RETRIES) {
-            throw new \Exception(__("Couldn't generate a random password not leaked"));
+            throw new \RuntimeException(__("Couldn't generate a random password not leaked"));
         }
 
         return $password;
