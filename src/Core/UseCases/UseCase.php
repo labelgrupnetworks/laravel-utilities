@@ -6,13 +6,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 abstract class UseCase implements UseCaseInterface
 {
-    public const RESPONSE_MESSAGE = 'Action has been finished';
+    public string $response_message = 'Action has been finished';
 
     public function handle(): UseCaseResponse
     {
         try {
             $response = $this->action();
-            return $this->success(__(self::RESPONSE_MESSAGE), $response);
+            return $this->success(__($this->response_message), $response);
         } catch ( \Throwable $exception ) {
             $code = array_key_exists($exception->getCode(), Response::$statusTexts)
                 ? $exception->getCode()

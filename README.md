@@ -73,10 +73,10 @@ class ExampleUseCase extends \Labelgrup\LaravelUtilities\Core\UseCases\UseCase
 
 If you want to customize the response implement the <strong>handle</strong> and return method to <strong>UseCaseResponse</strong>.
 
-You can specify <strong>RESPONSE_MESSAGE</strong> constant to set a message for response OK.
+You can specify <strong>$response_message</strong> to set a message for OK response.
 
 ```php
-public const RESPONSE_MESSAGE = 'Action has been finished';
+public string $response_message = 'Action has been finished';
 ```
 
 ## Helpers
