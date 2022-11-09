@@ -73,6 +73,12 @@ class ExampleUseCase extends \Labelgrup\LaravelUtilities\Core\UseCases\UseCase
 
 If you want to customize the response implement the <strong>handle</strong> and return method to <strong>UseCaseResponse</strong>.
 
+You can specify <strong>RESPONSE_MESSAGE</strong> constant to set a message for response OK.
+
+```php
+public const RESPONSE_MESSAGE = 'Action has been finished';
+```
+
 ## Helpers
 - [ApiResponse](#apiResponse)
 - [Image](#image)
