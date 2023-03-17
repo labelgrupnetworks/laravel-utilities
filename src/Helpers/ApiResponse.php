@@ -3,25 +3,47 @@
 namespace Labelgrup\LaravelUtilities\Helpers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Symfony\Component\HttpFoundation\Response;
 
 class ApiResponse
 {
+	/**
+	 * Response success with data
+	 *
+	 * @param array|object $data
+	 * @param int $code
+	 * @return JsonResponse
+	 */
+	public static function ok(
+		array|object $data,
+		int $code = Response::HTTP_OK
+	): JsonResponse
+	{
+		return self::response($data, $code);
+	}
+
     /**
+	 * Response success with message and data
+	 *
      * @param string $message
-     * @param array $data
+     * @param array|object $data
      * @param int $code
      * @return JsonResponse
      */
     public static function done(
         string $message,
-        array $data = [],
+        array|object $data = [],
         int $code = Response::HTTP_OK
     ): JsonResponse
     {
         $responseData = [
             'message' => $message
         ];
+
+		if (!is_array($data)) {
+			$data = (array)$data;
+		}
 
         if ( count($data) ) {
             $responseData['result'] = $data;
@@ -30,21 +52,42 @@ class ApiResponse
         return self::response($responseData, $code);
     }
 
+	/**
+	 * Response error with errors
+	 *
+	 * @param array|object $errors
+	 * @param int $code
+	 * @return JsonResponse
+	 */
+	public static function error(
+		array|object $errors,
+		int $code = Response::HTTP_BAD_REQUEST
+	): JsonResponse
+	{
+		return self::response($errors, $code);
+	}
+
     /**
+	 * Response error with message and errors
+	 *
      * @param string $message
-     * @param array $errors
+     * @param array|object $errors
      * @param int $code
      * @return JsonResponse
      */
     public static function fail(
         string $message,
-        array $errors = [],
+        array|object $errors = [],
         int $code = Response::HTTP_BAD_REQUEST
     ): JsonResponse
     {
         $responseData = [
             'message' => $message
         ];
+
+		if (!is_array($errors)) {
+			$errors = (array)$errors;
+		}
 
         if ( count($errors) ) {
             $responseData['errors'] = $errors;
@@ -54,13 +97,15 @@ class ApiResponse
     }
 
     /**
-     * @param \Illuminate\Pagination\LengthAwarePaginator $list
+	 * Map pagination data with a resource
+	 *
+     * @param LengthAwarePaginator $list
      * @param $instanceResource
      * @param ...$instanceParams
      * @return array
      */
     public static function parsePagination(
-        \Illuminate\Pagination\LengthAwarePaginator $list,
+        LengthAwarePaginator $list,
         $instanceResource = null,
         ...$instanceParams
     ): array
@@ -82,12 +127,14 @@ class ApiResponse
     }
 
     /**
-     * @param array $data
+	 * Response json
+	 *
+     * @param array|object $data
      * @param int $code
      * @return JsonResponse
      */
     public static function response (
-        array $data,
+        array|object $data,
         int $code
     ): JsonResponse
     {
