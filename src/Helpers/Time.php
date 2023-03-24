@@ -33,7 +33,7 @@ class Time
         $days = floor($daySeconds / self::SECONDS_IN_TIME['d']);
         // extract hours
         $hourSeconds = $daySeconds % self::SECONDS_IN_TIME['d'];
-        $hours = floor($hourSeconds / self::SECONDS_IN_TIME['h']) + ($days * 24);
+        $hours = floor($hourSeconds / self::SECONDS_IN_TIME['h']);
         // extract minutes
         $minuteSeconds = $hourSeconds % self::SECONDS_IN_TIME['h'];
         $minutes = floor($minuteSeconds / self::SECONDS_IN_TIME['i']);
