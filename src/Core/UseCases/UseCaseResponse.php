@@ -58,7 +58,7 @@ class UseCaseResponse
 		];
 	}
 
-	public function responseToApi(bool $responseSimplified = false, ?string $resourceClass = null, ...$resourceParams): \Illuminate\Http\JsonResponse
+	public function responseToApi(bool $responseSimplified = false, ?string $resourceClass = null): \Illuminate\Http\JsonResponse
 	{
 		$code = array_key_exists($this->code, Response::$statusTexts) ? $this->code : Response::HTTP_INTERNAL_SERVER_ERROR;
 
@@ -85,7 +85,7 @@ class UseCaseResponse
                 } else if ($this->data instanceof Model) {
                     $response = $resourceClass::make($this->data);
                 } else if ($this->data instanceof LengthAwarePaginator) {
-                    $response = ApiResponse::parsePagination($this->data, $resourceClass, ...$resourceParams);
+                    $response = ApiResponse::parsePagination($this->data, $resourceClass);
                 }
             } catch (\Throwable $_) {}
         }
