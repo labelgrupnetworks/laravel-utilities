@@ -4,7 +4,6 @@ namespace Labelgrup\LaravelUtilities\Core\UseCases;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Labelgrup\LaravelUtilities\Helpers\ApiResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -59,7 +58,7 @@ class UseCaseResponse
 		];
 	}
 
-	public function responseToApi(bool $responseSimplified = false, ?JsonResource $resource = null, ...$resourceParams): \Illuminate\Http\JsonResponse
+	public function responseToApi(bool $responseSimplified = false, ?string $resourceClass = null, ...$resourceParams): \Illuminate\Http\JsonResponse
 	{
 		$code = array_key_exists($this->code, Response::$statusTexts) ? $this->code : Response::HTTP_INTERNAL_SERVER_ERROR;
 
@@ -79,14 +78,16 @@ class UseCaseResponse
 
         $response = $this->data;
 
-        if ($resource) {
-            if ($this->data instanceof Collection) {
-                $response = $resource::collection($this->data);
-            } else if ($this->data instanceof Model) {
-                $response = $resource::make($this->data);
-            } else if ($this->data instanceof LengthAwarePaginator) {
-                $response = ApiResponse::parsePagination($this->data, $resource, ...$resourceParams);
-            }
+        if ($resourceClass) {
+            try {
+                if ($this->data instanceof Collection) {
+                    $response = $resourceClass::collection($this->data);
+                } else if ($this->data instanceof Model) {
+                    $response = $resourceClass::make($this->data);
+                } else if ($this->data instanceof LengthAwarePaginator) {
+                    $response = ApiResponse::parsePagination($this->data, $resourceClass, ...$resourceParams);
+                }
+            } catch (\Throwable $_) {}
         }
 
 		if ($responseSimplified) {
