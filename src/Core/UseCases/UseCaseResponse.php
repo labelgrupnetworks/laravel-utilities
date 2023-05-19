@@ -63,10 +63,6 @@ class UseCaseResponse
 		$code = array_key_exists($this->code, Response::$statusTexts) ? $this->code : Response::HTTP_INTERNAL_SERVER_ERROR;
 
 		if (!$this->success) {
-			if ($responseSimplified) {
-				return ApiResponse::error(is_array($this->data) ? $this->data : ['errors' => $this->data], $code);
-			}
-
 			return ApiResponse::fail(
 				$this->message,
 				is_array($this->data)
