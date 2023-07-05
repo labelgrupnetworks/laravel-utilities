@@ -2,17 +2,19 @@
 
 namespace Labelgrup\LaravelUtilities\Core\UseCases;
 
+use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
 abstract class UseCase implements UseCaseInterface
 {
-    public string $response_message = 'Action has been finished';
+    public const SUCCESS_STATUS_CODE = Response::HTTP_OK;
+	public string $response_message = 'Action has been finished';
 
     public function handle(): UseCaseResponse
     {
         try {
             $response = $this->action();
-            return $this->success(__($this->response_message), $response);
+            return $this->success(__($this->response_message), $response, self::SUCCESS_STATUS_CODE);
         } catch ( \Throwable $exception ) {
             $code = array_key_exists($exception->getCode(), Response::$statusTexts)
                 ? $exception->getCode()
