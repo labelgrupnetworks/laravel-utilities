@@ -87,7 +87,7 @@ class UseCaseResponse
         }
 
 		if ($responseSimplified) {
-            return ApiResponse::ok(is_array($response) || is_object($response) ? $response : ['data' => $response], $code);
+            return ApiResponse::ok(is_array($response) || is_object($response) ? $response : ['data' => $response], $this->code);
 		}
 
 		return ApiResponse::done(
