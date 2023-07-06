@@ -93,7 +93,7 @@ class UseCaseResponse
 		return ApiResponse::done(
 			$this->message,
 			is_array($response) || is_object($response) ? $response : ['data' => $response],
-			$code
+			$this->code
 		);
 	}
 }

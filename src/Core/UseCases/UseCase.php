@@ -15,9 +15,8 @@ abstract class UseCase implements UseCaseInterface
             $response = $this->action();
             return $this->success(__($this->response_message), $response, $this->success_status_code);
         } catch ( \Throwable $exception ) {
-            $code = array_key_exists($exception->status ?? $exception->getCode(), Response::$statusTexts)
-                ? $exception->status ?? $exception->getCode()
-                : Response::HTTP_INTERNAL_SERVER_ERROR;
+			$code = $exception->status ?? $exception->getCode();
+            $code = array_key_exists($code, Response::$statusTexts) ? $code : Response::HTTP_INTERNAL_SERVER_ERROR;
             return $this->fail(__($exception->getMessage()), $exception->getTrace(), $code);
         }
     }
