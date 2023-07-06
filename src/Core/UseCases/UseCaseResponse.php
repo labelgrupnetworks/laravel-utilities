@@ -60,7 +60,7 @@ class UseCaseResponse
 
 	public function responseToApi(bool $responseSimplified = false, ?string $resourceClass = null): \Illuminate\Http\JsonResponse
 	{
-		$code = array_key_exists($this->code, Response::$statusTexts) ? $this->code : Response::HTTP_INTERNAL_SERVER_ERROR;
+		$this->code = array_key_exists($this->code, Response::$statusTexts) ? $this->code : Response::HTTP_INTERNAL_SERVER_ERROR;
 
 		if (!$this->success) {
 			return ApiResponse::fail(
@@ -68,7 +68,7 @@ class UseCaseResponse
 				is_array($this->data)
 					? $this->data
 					: ['errors' => $this->data],
-				$code
+				$this->code
 			);
 		}
 
