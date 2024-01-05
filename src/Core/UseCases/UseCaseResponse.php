@@ -72,28 +72,29 @@ class UseCaseResponse
 			);
 		}
 
-        $response = $this->data;
-
-        if ($resourceClass) {
-            try {
-                if ($this->data instanceof Collection) {
-                    $response = $resourceClass::collection($this->data);
-                } else if ($this->data instanceof Model) {
-                    $response = $resourceClass::make($this->data);
-                } else if ($this->data instanceof LengthAwarePaginator) {
-                    $response = ApiResponse::parsePagination($this->data, $resourceClass);
-                }
-            } catch (\Throwable $_) {}
-        }
-
-		if ($responseSimplified) {
-            return ApiResponse::ok(is_array($response) || is_object($response) ? $response : ['data' => $response], $this->code);
+        if ($responseSimplified) {
+            return ApiResponse::ok($this->parseResponse($resourceClass), $this->code);
 		}
 
-		return ApiResponse::done(
-			$this->message,
-			is_array($response) || is_object($response) ? $response : ['data' => $response],
-			$this->code
-		);
+		return ApiResponse::done($this->message, $this->parseResponse($resourceClass), $this->code);
+	}
+
+	private function parseResponse(?string $resourceClass = null): mixed
+	{
+		$response = $this->data;
+
+		if ($resourceClass) {
+			try {
+				if ($this->data instanceof Collection) {
+					$response = $resourceClass::collection($this->data);
+				} else if ($this->data instanceof Model) {
+					$response = $resourceClass::make($this->data);
+				} else if ($this->data instanceof LengthAwarePaginator) {
+					$response = ApiResponse::parsePagination($this->data, $resourceClass);
+				}
+			} catch (\Throwable $_) {}
+		}
+
+		return is_array($response) || is_object($response) ? $response : ['data' => $response];
 	}
 }
