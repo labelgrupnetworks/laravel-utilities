@@ -9,6 +9,7 @@
         "ext-curl": "*"
     },
     "require-dev": {
+        "laravel/pint": "^1.18",
         "phpunit/phpunit": "^9.5"
     },
     "license": "MIT",

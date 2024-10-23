@@ -9,12 +9,12 @@ class Password
 
     /**
      * @param int $min_size
-     * @return \Illuminate\Validation\Rules\Password
      * @throws \Exception
+     * @return \Illuminate\Validation\Rules\Password
      */
     public static function rule(int $min_size = self::PASSWORD_LENGTH): \Illuminate\Validation\Rules\Password
     {
-        if ( $min_size < self::PASSWORD_LENGTH ) {
+        if ($min_size < self::PASSWORD_LENGTH) {
             throw new \RuntimeException(__("Password doesn't meet minimal length requirement"));
         }
 
@@ -29,8 +29,8 @@ class Password
     /**
      * @param int $length
      * @param int $max_retries
-     * @return string
      * @throws \Exception
+     * @return string
      */
     public static function generateSecurePassword(
         int $length = self::PASSWORD_LENGTH,
@@ -65,7 +65,8 @@ class Password
      */
     public static function isLeakedPassword(string $password): bool
     {
-        $verifier = new \Illuminate\Validation\NotPwnedVerifier((new \Illuminate\Http\Client\Factory()));
+        $verifier = new \Illuminate\Validation\NotPwnedVerifier((new \Illuminate\Http\Client\Factory));
+
         return !$verifier->verify([
             'value' => $password,
             'threshold' => 0

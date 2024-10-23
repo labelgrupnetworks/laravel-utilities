@@ -12,8 +12,7 @@ class Text
     public static function sanitize(
         string $text,
         string $divider = '-'
-    ): string
-    {
+    ): string {
         // replace non letter or digits by divider
         $text = preg_replace('~[^\pL\d]+~u', $divider, $text);
         // transliterate

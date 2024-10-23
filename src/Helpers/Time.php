@@ -19,8 +19,7 @@ class Time
     public static function parseTimeForHumans(
         int $inputSeconds,
         string $unitMin = 's'
-    ): string
-    {
+    ): string {
         if (!array_key_exists($unitMin, self::SECONDS_IN_TIME)) {
             throw new \InvalidArgumentException(__('Invalid unitMin'));
         }
@@ -70,8 +69,7 @@ class Time
         int $time,
         string $unitFrom,
         string $unitTo
-    ): float
-    {
+    ): float {
         if (!array_key_exists($unitFrom, self::SECONDS_IN_TIME)) {
             throw new \InvalidArgumentException(__('Invalid unitFrom'));
         }
@@ -87,6 +85,7 @@ class Time
         }
 
         $time_from *= self::SECONDS_IN_TIME[$unitFrom];
+
         return $time_from / self::SECONDS_IN_TIME[$unitTo];
     }
 }

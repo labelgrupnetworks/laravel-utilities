@@ -14,12 +14,11 @@ class Zip
     public static function create(
         string $zipFile,
         string $sourcePath
-    ): ?string
-    {
+    ): ?string {
         $pathInfo = pathInfo($sourcePath);
         $parentPath = $pathInfo['dirname'];
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $zip->open($zipFile, ZIPARCHIVE::CREATE);
         self::folderToZip($sourcePath, $zip, strlen("$parentPath/"));
         $zip->close();
@@ -37,8 +36,7 @@ class Zip
         string $folder,
         ZipArchive &$zipFile,
         int $exclusiveLength
-    )
-    {
+    ) {
         $handle = opendir($folder);
         while (false !== $item = readdir($handle)) {
             if ($item !== '.' && $item !== '..') {

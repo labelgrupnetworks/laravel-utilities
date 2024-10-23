@@ -14,7 +14,8 @@ class SlugRule implements Rule
      * @return bool
      */
     public function passes(
-        $attribute, $value
+        $attribute,
+        $value
     ): bool {
         return preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $value);
     }

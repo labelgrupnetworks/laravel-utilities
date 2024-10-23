@@ -1,0 +1,70 @@
+{
+  "preset": "psr12",
+  "rules": {
+    "array_indentation": false,
+    "binary_operator_spaces": {
+      "default": "single_space"
+    },
+    "blank_line_after_namespace": true,
+    "blank_line_after_opening_tag": true,
+    "blank_line_before_statement": {
+      "statements": [
+        "continue",
+        "return"
+      ]
+    },
+    "braces": {
+      "allow_single_line_anonymous_class_with_empty_body": true,
+      "allow_single_line_closure": true,
+      "position_after_functions_and_oop_constructs": "same"
+    },
+    "class_attributes_separation": {
+      "elements": {
+        "method": "one",
+        "trait_import": "none"
+      }
+    },
+    "concat_space": {
+      "spacing": "one"
+    },
+    "method_chaining_indentation": true,
+    "new_with_braces": {
+      "anonymous_class": false,
+      "named_class": false
+    },
+    "no_multiline_whitespace_around_double_arrow": false,
+    "no_multiple_statements_per_line": false,
+    "no_spaces_around_offset": false,
+    "no_unneeded_control_parentheses": false,
+    "no_whitespace_before_comma_in_array": false,
+    "ordered_imports": {
+      "sort_algorithm": "alpha"
+    },
+    "ordered_interfaces": true,
+    "ordered_traits": true,
+    "phpdoc_order": true,
+    "return_type_declaration": true,
+    "self_accessor": true,
+    "simplified_null_return": true,
+    "single_class_element_per_statement": true,
+    "single_import_per_statement": false,
+    "single_trait_insert_per_statement": false,
+    "single_space_around_construct": true,
+    "spaces_inside_parentheses": true,
+    "statement_indentation": true,
+    "ternary_operator_spaces": true,
+    "type_declaration_spaces": true,
+    "types_spaces": true,
+    "visibility_required": {
+      "elements": [
+        "method",
+        "property"
+      ]
+    },
+    "whitespace_after_comma_in_array": true
+  },
+  "exclude": [
+    "migrations",
+    "public"
+  ]
+}

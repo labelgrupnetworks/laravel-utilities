@@ -28,13 +28,13 @@ class Image
      */
     public static function destroy(
         string $src
-    ): bool
-    {
+    ): bool {
         if (!Storage::exists($src)) {
             return false;
         }
 
         Storage::delete($src);
+
         return true;
     }
 
@@ -46,8 +46,7 @@ class Image
     public static function downloadFromUrl(
         string $url,
         string $fileName
-    ): void
-    {
+    ): void {
         $user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36';
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -75,8 +74,7 @@ class Image
         string $folder = '',
         string $disk = null,
         string $file_name = null
-    ): string
-    {
+    ): string {
         return $image->storeAs(
             $folder,
             $file_name ?? Str::random(30) . '.' . $image->extension(),

@@ -24,11 +24,13 @@ class MakeUseCase extends \Labelgrup\LaravelUtilities\Core\Commands\GeneratorCom
     {
         $replace = [
             '$NAMESPACE$' => $this->getNamespace($name),
-            '$CLASS_NAME$' => str_replace($this->getNamespace($name).'\\', '', $name)
+            '$CLASS_NAME$' => str_replace($this->getNamespace($name) . '\\', '', $name)
         ];
 
         return str_replace(
-            array_keys($replace), array_values($replace), parent::buildClass($name)
+            array_keys($replace),
+            array_values($replace),
+            parent::buildClass($name)
         );
     }
 }
