@@ -11,22 +11,22 @@ class ApiResponse
     /**
      * Response success with data
      *
-     * @param array|object $data
+     * @param null|array|object $data
      * @param int $code
      * @return JsonResponse
      */
     public static function ok(
-        array|object $data,
+        null|array|object $data,
         int $code = Response::HTTP_OK
     ): JsonResponse {
-        return self::response($data, $code);
+        return self::response($data ?? [], $code);
     }
 
     /**
      * Response success with message and data
      *
      * @param string $message
-     * @param array|object $data
+     * @param array|object|null $data
      * @param int $code
      * @return JsonResponse
      */
