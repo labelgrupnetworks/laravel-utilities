@@ -23,6 +23,7 @@ abstract class UseCase implements UseCaseInterface
                 __($exception->getMessage()),
                 property_exists($exception, 'response') ? $exception->response : null,
                 $code,
+                property_exists($exception, 'errorCodeDescription') ? $exception->errorCodeDescription : null,
                 $exception->getTrace() ?? []
             );
         }
@@ -32,6 +33,7 @@ abstract class UseCase implements UseCaseInterface
         ?string $message = null,
         mixed $data = null,
         int $code = Response::HTTP_BAD_REQUEST,
+        ?string $error_code = null,
         array $trace = []
     ): UseCaseResponse {
         return new UseCaseResponse(
@@ -39,6 +41,7 @@ abstract class UseCase implements UseCaseInterface
             $message,
             $code,
             $data,
+            $error_code,
             $trace
         );
     }

@@ -14,6 +14,7 @@ class UseCaseResponse
     protected ?string $message;
     protected int $code;
     protected mixed $data = null;
+    protected ?string $error_code = null;
     protected ?array $trace = null;
 
     public function __construct(
@@ -21,12 +22,14 @@ class UseCaseResponse
         ?string $message,
         int $code,
         mixed $data = null,
+        ?string $error_code = null,
         array $trace = []
     ) {
         $this->success = $success;
         $this->message = $message;
         $this->code = $code;
         $this->data = $data;
+        $this->error_code = $error_code;
         $this->trace = $trace;
     }
 
@@ -57,6 +60,7 @@ class UseCaseResponse
             'code' => $this->code,
             'message' => $this->message,
             'data' => $this->data,
+            'error_code' => $this->error_code,
             'trace' => $this->trace
         ];
     }
@@ -72,6 +76,7 @@ class UseCaseResponse
                     ? $this->data
                     : ['errors' => $this->data],
                 $this->code,
+                $this->error_code,
                 $this->trace
             );
         }

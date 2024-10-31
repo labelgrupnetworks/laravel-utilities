@@ -70,6 +70,7 @@ class ApiResponse
      * @param string $message
      * @param array|object $errors
      * @param int $code
+     * @param string|null $error_code
      * @param array $trace
      * @return JsonResponse
      */
@@ -77,6 +78,7 @@ class ApiResponse
         string $message,
         array|object $errors = [],
         int $code = Response::HTTP_BAD_REQUEST,
+        ?string $error_code = null,
         array $trace = []
     ): JsonResponse {
         $responseData = [
@@ -91,9 +93,15 @@ class ApiResponse
             $responseData['errors'] = $errors;
         }
 
+        if ($error_code) {
+            $responseData['error_code'] = $error_code;
+        }
+
         if (config('app.debug')) {
             $responseData['trace'] = $trace;
         }
+
+        ksort($responseData);
 
         return self::response($responseData, $code);
     }
