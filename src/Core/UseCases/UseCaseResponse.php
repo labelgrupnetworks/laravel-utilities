@@ -14,17 +14,20 @@ class UseCaseResponse
     protected ?string $message;
     protected int $code;
     protected mixed $data = null;
+    protected ?array $trace = null;
 
     public function __construct(
         bool $success,
         ?string $message,
         int $code,
-        mixed $data = null
+        mixed $data = null,
+        array $trace = []
     ) {
         $this->success = $success;
         $this->message = $message;
         $this->code = $code;
         $this->data = $data;
+        $this->trace = $trace;
     }
 
     public function isSuccess(): bool
@@ -53,7 +56,8 @@ class UseCaseResponse
             'success' => $this->success,
             'code' => $this->code,
             'message' => $this->message,
-            'data' => $this->data
+            'data' => $this->data,
+            'trace' => $this->trace
         ];
     }
 
@@ -67,7 +71,8 @@ class UseCaseResponse
                 is_array($this->data)
                     ? $this->data
                     : ['errors' => $this->data],
-                $this->code
+                $this->code,
+                $this->trace
             );
         }
 

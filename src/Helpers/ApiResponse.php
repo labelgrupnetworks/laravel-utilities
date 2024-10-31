@@ -70,12 +70,14 @@ class ApiResponse
      * @param string $message
      * @param array|object $errors
      * @param int $code
+     * @param array $trace
      * @return JsonResponse
      */
     public static function fail(
         string $message,
         array|object $errors = [],
-        int $code = Response::HTTP_BAD_REQUEST
+        int $code = Response::HTTP_BAD_REQUEST,
+        array $trace = []
     ): JsonResponse {
         $responseData = [
             'message' => $message
@@ -87,6 +89,10 @@ class ApiResponse
 
         if (count($errors)) {
             $responseData['errors'] = $errors;
+        }
+
+        if (config('app.debug')) {
+            $responseData['trace'] = $trace;
         }
 
         return self::response($responseData, $code);

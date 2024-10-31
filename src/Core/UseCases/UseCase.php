@@ -19,20 +19,27 @@ abstract class UseCase implements UseCaseInterface
             $code = $exception->status ?? $exception->getCode();
             $code = array_key_exists($code, Response::$statusTexts) ? $code : Response::HTTP_INTERNAL_SERVER_ERROR;
 
-            return $this->fail(__($exception->getMessage()), $exception->getTrace(), $code);
+            return $this->fail(
+                __($exception->getMessage()),
+                property_exists($exception, 'response') ? $exception->response : null,
+                $code,
+                $exception->getTrace() ?? []
+            );
         }
     }
 
     protected function fail(
         ?string $message = null,
         mixed $data = null,
-        int $code = Response::HTTP_BAD_REQUEST
+        int $code = Response::HTTP_BAD_REQUEST,
+        array $trace = []
     ): UseCaseResponse {
         return new UseCaseResponse(
             false,
             $message,
             $code,
-            $data
+            $data,
+            $trace
         );
     }
 
