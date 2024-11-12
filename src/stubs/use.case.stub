@@ -3,9 +3,9 @@
 namespace $NAMESPACE$;
 
 use \Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
-use \Labelgrup\LaravelUtilities\Core\UseCases\WithValidation;
+use \Labelgrup\LaravelUtilities\Core\UseCases\WithValidateInterface;
 
-class $CLASS_NAME$ extends UseCase implements WithValidation
+class $CLASS_NAME$ extends UseCase implements WithValidateInterface
 {
 	public function action()
 	{
