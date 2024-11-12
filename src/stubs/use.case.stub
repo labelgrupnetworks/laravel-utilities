@@ -2,10 +2,18 @@
 
 namespace $NAMESPACE$;
 
-class $CLASS_NAME$ extends \Labelgrup\LaravelUtilities\Core\UseCases\UseCase
+use \Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
+use \Labelgrup\LaravelUtilities\Core\UseCases\WithValidation;
+
+class $CLASS_NAME$ extends UseCase implements WithValidation
 {
 	public function action()
 	{
 		// Implement your use case
+	}
+
+	public function validate(): void
+	{
+		// Implement your validation
 	}
 }

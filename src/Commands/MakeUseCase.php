@@ -4,14 +4,26 @@ namespace Labelgrup\LaravelUtilities\Commands;
 
 class MakeUseCase extends \Labelgrup\LaravelUtilities\Core\Commands\GeneratorCommand
 {
-    protected $signature = 'make:use-case {name}';
+    protected $signature = 'make:use-case {name} {--without-validation}';
 
     protected $description = 'Create a new UseCase class';
 
     protected $type = 'UseCase';
 
+    protected bool $without_validation = true;
+
+    public function handle()
+    {
+        $this->without_validation = $this->option('without-validation');
+        parent::handle();
+    }
+
     protected function getStub(): string
     {
+        if ($this->without_validation) {
+            return $this->resolveStubPath('/../../stubs/use.case.without.validation.stub');
+        }
+
         return $this->resolveStubPath('/../../stubs/use.case.stub');
     }
 

@@ -1,0 +1,13 @@
+<?php
+
+namespace $NAMESPACE$;
+
+use \Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
+
+class $CLASS_NAME$ extends UseCase
+{
+	public function action()
+	{
+		// Implement your use case
+	}
+}

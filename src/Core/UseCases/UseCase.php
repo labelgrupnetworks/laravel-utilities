@@ -12,7 +12,7 @@ abstract class UseCase implements UseCaseInterface
     public function handle(): UseCaseResponse
     {
         try {
-            $response = $this->action();
+            $response = $this->perform();
 
             return $this->success(__($this->response_message), $response, $this->success_status_code);
         } catch (\Throwable $exception) {
@@ -27,6 +27,15 @@ abstract class UseCase implements UseCaseInterface
                 $exception->getTrace() ?? []
             );
         }
+    }
+
+    public function perform(): mixed
+    {
+        if (method_exists($this, 'validate')) {
+            $this->validate();
+        }
+
+        return $this->action();
     }
 
     protected function fail(
