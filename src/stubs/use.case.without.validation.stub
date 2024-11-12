@@ -6,7 +6,7 @@ use \Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
 
 class $CLASS_NAME$ extends UseCase
 {
-	/*
+	/**
 	* Methods inherited from UseCase
 	*
 	* handle(): Method to called to get UseCaseResponse

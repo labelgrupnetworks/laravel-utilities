@@ -7,11 +7,10 @@ use \Labelgrup\LaravelUtilities\Core\UseCases\WithValidateInterface;
 
 class $CLASS_NAME$ extends UseCase implements WithValidateInterface
 {
-	/*
+	/**
 	* Methods inherited from UseCase
 	*
 	* handle(): Method to called to get UseCaseResponse
-	*
 	* perform(): Method to call $this->validate() (if implemented) and if no throw exception, call & return $this->action()
 	*/
 

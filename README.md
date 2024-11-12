@@ -48,25 +48,37 @@ php artisan make:api-request {ApiRequestName}
 ### MakeUseCase
 Command to create a <strong>UseCase</strong> in <strong>/App/UseCases/</strong> to decouple the different <strong>Strong</strong> actions.
 ```bash
-php artisan make:use-case {UseCaseName}
+php artisan make:use-case {UseCaseName} {--without-validation}
 ```
 The class generated extend to <strong>UseCase</strong> and has <strong>UseCaseInterface</strong>. This class required implement the method <strong>action</strong> and have the <strong>handler</strong> method to response.
 
 ```php
-class ExampleUseCase extends \Labelgrup\LaravelUtilities\Core\UseCases\UseCase
+use \Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
+use \Labelgrup\LaravelUtilities\Core\UseCases\WithValidateInterface;
+
+class ExampleUseCase extends UseCases\UseCase implements WithValidateInterface
 {
+    /**
+	* Methods inherited from UseCase
+	*
+	* handle(): Method to called to get UseCaseResponse
+	* perform(): Method to call $this->validate() (if implemented) and if no throw exception, call & return $this->action()
+	*/
+	
+	/**
+	 * Implement your use case
+	 */
 	public function action()
 	{
-		/*
-		* Require implement use case action
-		*/
+		// Implement your use case
 	}
 
-	public function handle(): \Labelgrup\LaravelUtilities\Core\UseCases\UseCaseResponse
+	/**
+	 * Validate the use case
+	 */
+	public function validate(): void
 	{
-		/*
-		* This method is optional to customize response. Require use UseCaseResponse class
-		*/
+		// Implement your validation
 	}
 }
 ```
