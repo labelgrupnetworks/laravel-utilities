@@ -2,7 +2,7 @@
 
 namespace $NAMESPACE$;
 
-use \Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
+use Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
 
 class $CLASS_NAME$ extends UseCase
 {

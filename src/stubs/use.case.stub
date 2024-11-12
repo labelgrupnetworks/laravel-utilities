@@ -2,8 +2,8 @@
 
 namespace $NAMESPACE$;
 
-use \Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
-use \Labelgrup\LaravelUtilities\Core\UseCases\WithValidateInterface;
+use Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
+use Labelgrup\LaravelUtilities\Core\UseCases\WithValidateInterface;
 
 class $CLASS_NAME$ extends UseCase implements WithValidateInterface
 {
