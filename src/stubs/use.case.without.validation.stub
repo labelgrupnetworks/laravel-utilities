@@ -13,9 +13,6 @@ class $CLASS_NAME$ extends UseCase
 	* perform(): Method to call $this->validate() (if implemented) and if no throw exception, call & return $this->action()
 	*/
 
-	/**
-	 * Implement your use case
-	 */
 	public function action()
 	{
 		// Implement your use case
