@@ -152,7 +152,7 @@ public static function response(
 ### ExceptionHandler
 This class helps to handle exceptions in Laravel projects. Methods:
 ```php
-public static function render(\Throwable $exception, Request $request): JsonResponse
+public static function render(\Throwable $exception, Request $request)
 ```
 
 This class you can use in:
@@ -160,7 +160,7 @@ This class you can use in:
 #### Laravel 9.X, 10.X
 Add in `app/Exceptions/Handler.php` in the method `render`:
 ```php
-ExceptionHandler::route($e, $request);
+ExceptionHandler::render($e, $request);
 ```
 #### Laravel version ^11.X
 Add in `bootstrap/app.php`:
