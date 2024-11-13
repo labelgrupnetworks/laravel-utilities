@@ -30,6 +30,7 @@ composer update labelgrup/laravel-utilities
 
 ## Table of contents
 - [Commands](#commands)
+- [CustomException](#customException)
 - [Helpers](#helpers)
 - [Rules](#rules)
 
@@ -85,14 +86,35 @@ class ExampleUseCase extends UseCases\UseCase implements WithValidateInterface
 
 If you want to customize the response implement the <strong>handle</strong> and return method to <strong>UseCaseResponse</strong>.
 
-You can specify <strong>$response_message</strong> to set a message for OK response.
+- You can specify `$response_message` to set a message for OK response.
+- You can specify `$success_status_code`  to set a status code for OK response. If not set, the default is 200.
 
 ```php
 public string $response_message = 'Action has been finished';
 ```
+## CustomException
+This class provide a custom exception to Laravel projects. This class extends from <strong>Exception</strong> and implements <strong>Renderable</strong> interface. This class has a method <strong>render</strong> to parse the exception to a response.
+
+```php
+public function __construct(
+    public string $error_code,
+    public string $error_message,
+    public int $http_code = Response::HTTP_INTERNAL_SERVER_ERROR,
+    public ?array $report_data = ['logs' => []],
+    public ?array $response = [],
+    public bool $should_render = true
+)
+```
+- `error_code`: The error code to identify the exception.
+- `error_message`: The error message to show in the response.
+- `http_code`: The HTTP code to show in the response.
+- `report_data`: The data to report in the logs.
+- `response`: The response to show in the response.
+- `should_render`: If the exception should be rendered.
 
 ## Helpers
 - [ApiResponse](#apiResponse)
+- [ExceptionHandler](#exceptionHandler)
 - [Image](#image)
 - [Password](#password)
 - [Text](#text)
@@ -127,6 +149,29 @@ public static function response(
 	int $code
 ): JsonResponse
 ```
+### ExceptionHandler
+This class helps to handle exceptions in Laravel projects. Methods:
+```php
+public static function render(\Throwable $exception, Request $request): JsonResponse
+```
+
+This class you can use in:
+
+#### Laravel 9.X, 10.X
+Add in `app/Exceptions/Handler.php` in the method `render`:
+```php
+ExceptionHandler::route($e, $request);
+```
+#### Laravel version ^11.X
+Add in `bootstrap/app.php`:
+```php
+->withExceptions(function (Exceptions $exceptions) {
+    $exceptions->render(function (\Throwable $exception, Request $request) {
+        return ExceptionHandler::render($exception, $request);
+    });
+})
+```
+
 ### Image
 This class facilitates some actions on images.
 ```php
