@@ -166,9 +166,7 @@ ExceptionHandler::route($e, $request);
 Add in `bootstrap/app.php`:
 ```php
 ->withExceptions(function (Exceptions $exceptions) {
-    $exceptions->render(function (\Throwable $exception, Request $request) {
-        return ExceptionHandler::render($exception, $request);
-    });
+    ExceptionHandler::render($exceptions);
 })
 ```
 

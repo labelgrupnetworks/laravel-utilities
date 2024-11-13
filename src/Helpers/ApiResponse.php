@@ -97,7 +97,7 @@ class ApiResponse
             $responseData['error_code'] = $error_code;
         }
 
-        if (config('app.debug')) {
+        if (!empty($trace) && config('app.debug')) {
             $responseData['trace'] = $trace;
         }
 

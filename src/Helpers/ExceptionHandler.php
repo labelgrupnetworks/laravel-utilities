@@ -3,6 +3,7 @@
 namespace Labelgrup\LaravelUtilities\Helpers;
 
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\UnauthorizedException;
@@ -15,15 +16,27 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class ExceptionHandler
 {
     /**
+     * Render the exception into an HTTP response to Laravel version 9.x 10.x
      * @throws \Throwable
      */
-    public static function render(\Throwable $exception, Request $request): JsonResponse
+    public static function render(...$params)
+    {
+        if (version_compare(app()->version(), '11.0', '<')) {
+            return self::renderForLegacyVersion(...$params);
+        }
+
+        self::renderCurrentVersion(...$params);
+    }
+
+    protected static function renderForLegacyVersion(\Throwable $exception, Request $request): JsonResponse
     {
         if ($exception instanceof CustomException) {
-            return ApiResponse::error([
-                'code' => $exception->error_code,
-                'error' => $exception->error_message,
-            ], $exception->getCode());
+            return ApiResponse::fail(
+                $exception->getMessage(),
+                [],
+                $exception->getCode(),
+                $exception->error_code
+            );
         }
 
         if ($exception instanceof ValidationException) {
@@ -43,22 +56,49 @@ class ExceptionHandler
         }
 
         if ($exception instanceof HttpException) {
-            return ApiResponse::fail($exception->getMessage(), [], $exception->getStatusCode());
+            return ApiResponse::fail($exception->getMessage(), [], $exception->getStatusCode(), null, $exception->getTrace());
         }
 
         if (config('app.debug')) {
             return ApiResponse::fail($exception->getMessage(), [
-                'request' => $request->all(),
                 'file' => $exception->getFile(),
                 'line' => $exception->getLine(),
-                'trace' => $exception->getTrace(),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], Response::HTTP_INTERNAL_SERVER_ERROR, null, $exception->getTrace());
         }
 
         if ($exception instanceof \Exception) {
-            return ApiResponse::fail($exception->getMessage(), [], Response::HTTP_INTERNAL_SERVER_ERROR);
+            return ApiResponse::fail($exception->getMessage(), [], Response::HTTP_INTERNAL_SERVER_ERROR, null, $exception->getTrace());
         }
 
-        return ApiResponse::fail('Internal Server Error', [], Response::HTTP_INTERNAL_SERVER_ERROR);
+        return ApiResponse::fail('Internal Server Error', [], Response::HTTP_INTERNAL_SERVER_ERROR, null, $exception->getTrace());
+    }
+
+    protected static function renderCurrentVersion(Exceptions $exceptions): void
+    {
+        $exceptions
+            ->render(function (CustomException $exception, Request $request) {
+                return self::renderForLegacyVersion($exception, $request);
+            })
+            ->render(function (ValidationException $exception, Request $request) {
+                return self::renderForLegacyVersion($exception, $request);
+            })
+            ->render(function (AuthenticationException $exception, Request $request) {
+                return self::renderForLegacyVersion($exception, $request);
+            })
+            ->render(function (UnauthorizedException $exception, Request $request) {
+                return self::renderForLegacyVersion($exception, $request);
+            })
+            ->render(function (NotFoundHttpException $exception, Request $request) {
+                return self::renderForLegacyVersion($exception, $request);
+            })
+            ->render(function (HttpException $exception, Request $request) {
+                return self::renderForLegacyVersion($exception, $request);
+            })
+            ->render(function (\Exception $exception, Request $request) {
+                return self::renderForLegacyVersion($exception, $request);
+            })
+            ->render(function (\Throwable $exception, Request $request) {
+                return self::renderForLegacyVersion($exception, $request);
+            });
     }
 }
