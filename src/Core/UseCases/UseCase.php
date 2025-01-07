@@ -23,7 +23,7 @@ abstract class UseCase implements UseCaseInterface
                 __($exception->getMessage()),
                 property_exists($exception, 'response') ? $exception->response : null,
                 $code,
-                property_exists($exception, 'errorCodeDescription') ? $exception->errorCodeDescription : null,
+                property_exists($exception, 'error_code') ? $exception->error_code : null,
                 $exception->getTrace() ?? []
             );
         }
