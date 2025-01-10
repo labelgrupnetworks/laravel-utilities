@@ -90,7 +90,7 @@ class ApiResponse
         }
 
         if (count($errors)) {
-            $responseData['errors'] = $errors;
+            $responseData['errors'] = array_key_exists('errors', $errors) ? $errors['errors'] : $errors;
         }
 
         if ($error_code) {
