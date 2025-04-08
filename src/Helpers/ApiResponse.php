@@ -13,13 +13,16 @@ class ApiResponse
      *
      * @param null|array|object $data
      * @param int $code
+     * @param bool $streamJson
+     *
      * @return JsonResponse
      */
     public static function ok(
         null|array|object $data,
-        int $code = Response::HTTP_OK
+        int $code = Response::HTTP_OK,
+        bool $streamJson = false
     ): JsonResponse {
-        return self::response($data ?? [], $code);
+        return self::response($data ?? [], $code, $streamJson);
     }
 
     /**
@@ -28,12 +31,15 @@ class ApiResponse
      * @param string $message
      * @param array|object|null $data
      * @param int $code
+     * @param bool $streamJson
+     *
      * @return JsonResponse
      */
     public static function done(
         string $message,
         null|array|object $data = [],
-        int $code = Response::HTTP_OK
+        int $code = Response::HTTP_OK,
+        bool $streamJson = false
     ): JsonResponse {
         $responseData = [
             'message' => $message
@@ -47,7 +53,7 @@ class ApiResponse
             $responseData['result'] = $data;
         }
 
-        return self::response($responseData, $code);
+        return self::response($responseData, $code, $streamJson);
     }
 
     /**
@@ -55,13 +61,16 @@ class ApiResponse
      *
      * @param array|object $errors
      * @param int $code
+     * @param bool $streamJson
+     *
      * @return JsonResponse
      */
     public static function error(
         array|object $errors,
-        int $code = Response::HTTP_BAD_REQUEST
+        int $code = Response::HTTP_BAD_REQUEST,
+        bool $streamJson = false
     ): JsonResponse {
-        return self::response($errors, $code);
+        return self::response($errors, $code, $streamJson);
     }
 
     /**
@@ -72,6 +81,8 @@ class ApiResponse
      * @param int $code
      * @param string|null $error_code
      * @param array $trace
+     * @param bool $streamJson
+     *
      * @return JsonResponse
      */
     public static function fail(
@@ -79,7 +90,8 @@ class ApiResponse
         array|object $errors = [],
         int $code = Response::HTTP_BAD_REQUEST,
         ?string $error_code = null,
-        array $trace = []
+        array $trace = [],
+        bool $streamJson = false
     ): JsonResponse {
         $responseData = [
             'message' => $message
@@ -103,7 +115,7 @@ class ApiResponse
 
         ksort($responseData);
 
-        return self::response($responseData, $code);
+        return self::response($responseData, $code, $streamJson);
     }
 
     /**
@@ -140,12 +152,15 @@ class ApiResponse
      *
      * @param array|object $data
      * @param int $code
+     * @param bool $streamJson
+     *
      * @return JsonResponse
      */
     public static function response(
         array|object $data,
-        int $code
+        int $code,
+        bool $streamJson = false
     ): JsonResponse {
-        return response()->json($data, $code);
+        return ($streamJson ? response()->streamJson($data, $code) : response()->json($data, $code));
     }
 }
