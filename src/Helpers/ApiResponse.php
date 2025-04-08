@@ -5,6 +5,7 @@ namespace Labelgrup\LaravelUtilities\Helpers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedJsonResponse;
 
 class ApiResponse
 {
@@ -15,13 +16,13 @@ class ApiResponse
      * @param int $code
      * @param bool $streamJson
      *
-     * @return JsonResponse
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function ok(
         null|array|object $data,
         int $code = Response::HTTP_OK,
         bool $streamJson = false
-    ): JsonResponse {
+    ): JsonResponse|StreamedJsonResponse {
         return self::response($data ?? [], $code, $streamJson);
     }
 
@@ -33,14 +34,14 @@ class ApiResponse
      * @param int $code
      * @param bool $streamJson
      *
-     * @return JsonResponse
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function done(
         string $message,
         null|array|object $data = [],
         int $code = Response::HTTP_OK,
         bool $streamJson = false
-    ): JsonResponse {
+    ): JsonResponse|StreamedJsonResponse {
         $responseData = [
             'message' => $message
         ];
@@ -63,13 +64,13 @@ class ApiResponse
      * @param int $code
      * @param bool $streamJson
      *
-     * @return JsonResponse
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function error(
         array|object $errors,
         int $code = Response::HTTP_BAD_REQUEST,
         bool $streamJson = false
-    ): JsonResponse {
+    ): JsonResponse|StreamedJsonResponse {
         return self::response($errors, $code, $streamJson);
     }
 
@@ -83,7 +84,7 @@ class ApiResponse
      * @param array $trace
      * @param bool $streamJson
      *
-     * @return JsonResponse
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function fail(
         string $message,
@@ -92,7 +93,7 @@ class ApiResponse
         ?string $error_code = null,
         array $trace = [],
         bool $streamJson = false
-    ): JsonResponse {
+    ): JsonResponse|StreamedJsonResponse {
         $responseData = [
             'message' => $message
         ];
@@ -154,13 +155,13 @@ class ApiResponse
      * @param int $code
      * @param bool $streamJson
      *
-     * @return JsonResponse
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function response(
         array|object $data,
         int $code,
         bool $streamJson = false
-    ): JsonResponse {
+    ): JsonResponse|StreamedJsonResponse {
         return ($streamJson ? response()->streamJson($data, $code) : response()->json($data, $code));
     }
 }
