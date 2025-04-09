@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Labelgrup\LaravelUtilities\Helpers\ApiResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedJsonResponse;
 
 class UseCaseResponse
 {
@@ -65,7 +66,7 @@ class UseCaseResponse
         ];
     }
 
-    public function responseToApi(bool $responseSimplified = false, ?string $resourceClass = null): \Illuminate\Http\JsonResponse
+    public function responseToApi(bool $responseSimplified = false, ?string $resourceClass = null): JsonResponse|StreamedJsonResponse
     {
         $this->code = array_key_exists($this->code, Response::$statusTexts) ? $this->code : Response::HTTP_INTERNAL_SERVER_ERROR;
 
