@@ -5,6 +5,7 @@ namespace Labelgrup\LaravelUtilities\Helpers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedJsonResponse;
 
 class ApiResponse
 {
@@ -13,13 +14,16 @@ class ApiResponse
      *
      * @param null|array|object $data
      * @param int $code
-     * @return JsonResponse
+     * @param bool $streamJson
+     *
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function ok(
         null|array|object $data,
-        int $code = Response::HTTP_OK
-    ): JsonResponse {
-        return self::response($data ?? [], $code);
+        int $code = Response::HTTP_OK,
+        bool $streamJson = false
+    ): JsonResponse|StreamedJsonResponse {
+        return self::response($data ?? [], $code, $streamJson);
     }
 
     /**
@@ -28,13 +32,16 @@ class ApiResponse
      * @param string $message
      * @param array|object|null $data
      * @param int $code
-     * @return JsonResponse
+     * @param bool $streamJson
+     *
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function done(
         string $message,
         null|array|object $data = [],
-        int $code = Response::HTTP_OK
-    ): JsonResponse {
+        int $code = Response::HTTP_OK,
+        bool $streamJson = false
+    ): JsonResponse|StreamedJsonResponse {
         $responseData = [
             'message' => $message
         ];
@@ -47,7 +54,7 @@ class ApiResponse
             $responseData['result'] = $data;
         }
 
-        return self::response($responseData, $code);
+        return self::response($responseData, $code, $streamJson);
     }
 
     /**
@@ -55,13 +62,16 @@ class ApiResponse
      *
      * @param array|object $errors
      * @param int $code
-     * @return JsonResponse
+     * @param bool $streamJson
+     *
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function error(
         array|object $errors,
-        int $code = Response::HTTP_BAD_REQUEST
-    ): JsonResponse {
-        return self::response($errors, $code);
+        int $code = Response::HTTP_BAD_REQUEST,
+        bool $streamJson = false
+    ): JsonResponse|StreamedJsonResponse {
+        return self::response($errors, $code, $streamJson);
     }
 
     /**
@@ -72,15 +82,18 @@ class ApiResponse
      * @param int $code
      * @param string|null $error_code
      * @param array $trace
-     * @return JsonResponse
+     * @param bool $streamJson
+     *
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function fail(
         string $message,
         array|object $errors = [],
         int $code = Response::HTTP_BAD_REQUEST,
         ?string $error_code = null,
-        array $trace = []
-    ): JsonResponse {
+        array $trace = [],
+        bool $streamJson = false
+    ): JsonResponse|StreamedJsonResponse {
         $responseData = [
             'message' => $message
         ];
@@ -103,7 +116,7 @@ class ApiResponse
 
         ksort($responseData);
 
-        return self::response($responseData, $code);
+        return self::response($responseData, $code, $streamJson);
     }
 
     /**
@@ -140,12 +153,15 @@ class ApiResponse
      *
      * @param array|object $data
      * @param int $code
-     * @return JsonResponse
+     * @param bool $streamJson
+     *
+     * @return JsonResponse|StreamedJsonResponse
      */
     public static function response(
         array|object $data,
-        int $code
-    ): JsonResponse {
-        return response()->json($data, $code);
+        int $code,
+        bool $streamJson = false
+    ): JsonResponse|StreamedJsonResponse {
+        return ($streamJson ? response()->streamJson($data, $code) : response()->json($data, $code));
     }
 }
