@@ -4,6 +4,7 @@ namespace Labelgrup\LaravelUtilities\Core\UseCases;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Labelgrup\LaravelUtilities\Helpers\ApiResponse;
 use Symfony\Component\HttpFoundation\Response;
