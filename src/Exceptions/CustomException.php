@@ -32,9 +32,22 @@ class CustomException extends \Exception
 
     public function report(): void
     {
-        $this->http_code >= Response::HTTP_INTERNAL_SERVER_ERROR
-            ? Log::error($this->getMessage(), $this->getData())
-            : Log::warning($this->getMessage(), $this->getData());
+        $message = $this->getMessage();
+        $data = $this->getData();
+
+        if ($this->getCode() >= Response::HTTP_INTERNAL_SERVER_ERROR) {
+            Log::error($message, $data);
+
+            return;
+        }
+
+        if ($this->getCode() >= Response::HTTP_OK && $this->getCode() < Response::HTTP_MULTIPLE_CHOICES) {
+            Log::debug($message, $data);
+
+            return;
+        }
+
+        Log::warning($message, $data);
     }
 
     protected function getData(): array
