@@ -14,7 +14,7 @@ class CustomException extends \Exception
         public string $error_code,
         public string $error_message,
         public int $http_code = Response::HTTP_INTERNAL_SERVER_ERROR,
-        public ?array $report_data = ['logs' => []],
+        public ?array $report_data = [],
         public ?array $response = [],
         public bool $should_render = true
     ) {
@@ -32,40 +32,24 @@ class CustomException extends \Exception
 
     public function report(): void
     {
-        $request = request();
-        $method = $request->method();
-        $requestParams = static function () use ($method, $request) {
-            return $method === 'POST' || $method === 'PUT'
-                ? $request->all()
-                : $request->input();
-        };
-        $this->data = [
-            'message' => $this->getMessage(),
-            'code' => $this->getCode(),
-            'error' => $this->error_code,
-            'user_id' => auth()->user()->id ?? null,
-            'user_email' => auth()->user()->email ?? null,
-            'url' => $request->fullUrl(),
-            'method' => $request->method(),
-            'request' => $requestParams(),
-            'response' => $this->response
+        $this->http_code >= Response::HTTP_INTERNAL_SERVER_ERROR
+            ? Log::error($this->getMessage(), $this->getData())
+            : Log::warning($this->getMessage(), $this->getData());
+    }
+
+    protected function getData(): array
+    {
+        return [
+            'exception' => [
+                'class' => get_class($this),
+                'message' => $this->getMessage(),
+                'code' => $this->http_code,
+                'file' => $this->getFile(),
+                'line' => $this->getLine(),
+                'trace' => $this->getTrace(),
+                'error_code' => $this->error_code,
+                'extra_data' => $this->report_data
+            ]
         ];
-
-        foreach ($this->report_data as $key => $value) {
-            $this->reportNow($key, $value);
-        }
-    }
-
-    public function reportNow(string $channel, $value): void
-    {
-        match ($channel) {
-            'logs' => $this->reportLogs()
-        };
-    }
-
-    public function reportLogs(): void
-    {
-        $message = $this->error_code . ':' . $this->getMessage();
-        Log::warning($message, $this->data);
     }
 }
