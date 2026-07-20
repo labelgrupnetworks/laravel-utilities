@@ -44,5 +44,8 @@
                 "Labelgrup\\LaravelUtilities\\LaravelUtilitiesServiceProvider"
             ]
         }
+    },
+    "suggest": {
+        "laravel/mcp": "Required to use MCP features."
     }
 }

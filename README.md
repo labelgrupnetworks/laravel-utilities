@@ -33,6 +33,13 @@ The package is automatically registered through Laravel's package discovery.
   - [Zip](#zip)
 - [Validation Rules](#-validation-rules)
   - [SlugRule](#slugrule)
+- [MCP Tools (`AI\Mcp`)](#-mcp-tools-aimcp)
+  - [Tool bases: ControllerTool & UseCaseTool](#tool-bases-controllertool--usecasetool)
+  - [Response & error mapping](#response--error-mapping)
+  - [Scope authorization](#scope-authorization)
+  - [Input/output schemas](#inputoutput-schemas)
+  - [Configuration](#configuration)
+  - [Claude Code skills installer](#claude-code-skills-installer)
 
 ---
 
@@ -382,6 +389,147 @@ use Labelgrup\LaravelUtilities\Rules\SlugRule;
 // Valid: product-name, user-profile-123
 // Invalid: Product-Name, user_profile, -invalid-
 ```
+
+---
+
+## 🤖 MCP Tools (`AI\Mcp`)
+
+Framework for building [`laravel/mcp`](https://github.com/laravel/mcp) tools that reuse an app's existing controllers or use cases instead of re-implementing business logic. Requires `laravel/mcp` (listed under `suggest`, not `require` — install it yourself if you use this namespace; the package auto-detects its presence, see [Configuration](#configuration)).
+
+```
+Labelgrup\LaravelUtilities\AI\Mcp\
+├─ Schemas/
+│  ├─ Attributes/{Schema, OutputSchema}          ← declare a Tool's input/output schema by class reference
+│  ├─ Interfaces/{SchemaInterface, OutputSchemaInterface}
+│  └─ Traits/PaginationTrait                     ← generic paginated-output schema (integers only)
+└─ Tools/
+   ├─ Abstracts/{ControllerTool, UseCaseTool}    ← the two Tool bases
+   ├─ DTO/{EndpointDTO, UseCaseDTO}
+   ├─ Errors/DefaultToolErrorResolver
+   ├─ Interfaces/{ControllerToolInterface, UseCaseToolInterface, ToolErrorResolverInterface,
+   │  ToolErrorResponseBuilderInterface, McpScopeAuthorizerInterface}
+   └─ Resolvers/{ResolvesToolResponse, ResolvesToolSchemas}
+```
+
+### Tool bases: ControllerTool & UseCaseTool
+
+**`ControllerTool`** reuses an existing API controller method. The Tool declares an `EndpointDTO` (controller class, method, optional `FormRequest` class, plus scalar route `params`/Eloquent `models` for methods with route-model-binding). The base builds and validates that `FormRequest` from the MCP arguments, calls the controller, and maps the resulting `JsonResponse`:
+
+```php
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Abstracts\ControllerTool;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\DTO\EndpointDTO;
+
+class SearchProductTool extends ControllerTool
+{
+    public function endpoint(): EndpointDTO
+    {
+        return new EndpointDTO(SearchEngineController::class, 'searchProducts', SearchProductRequest::class);
+    }
+
+    public function schema(JsonSchema $schema): array
+    {
+        return [ /* input schema */ ];
+    }
+}
+```
+
+`request` is nullable (no-FormRequest methods are called with no arguments). The controller's own validation, guards and permission checks apply for free — the Tool never bypasses them.
+
+**`UseCaseTool`** calls a use case directly, without an HTTP controller in between. The Tool declares a `UseCaseDTO` (the use case instance + `responseToApi()` flags):
+
+```php
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Abstracts\UseCaseTool;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\DTO\UseCaseDTO;
+
+class SearchProductTool extends UseCaseTool
+{
+    public function useCase(Request $request): UseCaseDTO
+    {
+        $validated = $request->validate((new SearchProductRequest)->rules());
+
+        return new UseCaseDTO(use_case: new SearchProductsUseCase($validated), response_simplified: true);
+    }
+
+    public function schema(JsonSchema $schema): array
+    {
+        return [ /* input schema */ ];
+    }
+}
+```
+
+`useCase()` runs inside the response wrapper, so its own validation/construction errors are mapped cleanly. Note that `handle()`'s default flow calls `$use_case->handle()->responseToApi(...)` — the use case's own business exceptions are swallowed into a `JsonResponse` by `UseCase::handle()` before ever reaching the error resolver below. A Tool that wants a business exception to reach the error resolver raw must override `handle()` and call `perform()`/`action()` directly instead.
+
+A consumer needing a third input shape (e.g. `Spatie\LaravelData\Data` objects) implements its own sibling of these two — see NAP's `DataObjectControllerTool` for a worked example — rather than this package trying to cover every possible input shape.
+
+### Response & error mapping
+
+Both bases use the `ResolvesToolResponse` trait, funneling every call through `respond(callable)`:
+
+- `authorizeScope()` runs first — throws `UnauthorizedException` if the Tool isn't `#[IsReadOnly]` and the caller lacks write access (see [Scope authorization](#scope-authorization));
+- the callable's return is normalised: `string` → text, `array` → structured (via the overridable `transformResponse()` hook), `JsonResponse` → mapped by HTTP status (`responseFromJsonResponse()`), anything else → `'Success'`;
+- any `Throwable` → `report($e)` + `errorResponse($e)`.
+
+`responseFromJsonResponse()` maps by status: `5xx` → generic internal error; `4xx` → `error` (`error`/`message` from the body, sanitized); `204`/empty (with no output schema declared) → `'Success'`; otherwise → the structured body.
+
+`errorResponse()` delegates to a configurable resolver (`config('laravel-utilities.mcp.errors.resolver')`, default `DefaultToolErrorResolver` — must implement `ToolErrorResolverInterface`). `DefaultToolErrorResolver::resolve()`:
+
+1. `ValidationException` → flattened field errors.
+2. `HttpResponseException` → unwraps the underlying `JsonResponse`.
+3. Otherwise, if the exception's class is listed in `config('laravel-utilities.mcp.errors.exposed_exceptions')` → delegates to the app's own `ExceptionHandler::render()` (same mapping as the REST API).
+4. Otherwise, if `app.debug` is `true` → the raw (sanitized) exception message.
+5. Otherwise → generic `'Tool is temporarily unavailable'` (the real error only reaches the log, via `report()`).
+
+A consumer can add business exceptions to `exposed_exceptions` with zero code changes, or swap `errors.resolver` entirely for a project-specific mapping without forking this package.
+
+### Scope authorization
+
+`shouldRegister()`/`authorizeScope()` gate writes: a Tool without `#[IsReadOnly]` requires write access; read-only tools are always listed and callable. Write access itself is resolved via `config('laravel-utilities.mcp.scope_authorizer')` — a class implementing `McpScopeAuthorizerInterface::canWrite(): bool`, bound in the consuming app's own container/config. This package has no opinion on *how* a consumer determines write access (token scopes, roles, anything else) — it only defines the interface and the resolution point. If unset, `canWrite()` defaults to unrestricted (`true`).
+
+### Input/output schemas
+
+`ResolvesToolSchemas` provides default `schema()`/`outputSchema()` implementations for Tools that declare `#[Schema(SomeClass::class)]` / `#[OutputSchema(SomeClass::class, key: '...', many: false, scalar: false)]` instead of hand-writing the array inline. `#[Schema]` is repeatable (merged in declaration order) for input combining multiple shape sources. A Tool can still override either method directly — an explicit override always wins over the attribute.
+
+`PaginationTrait::paginationOutputSchema()` provides a generic paginated-output shape (`items` + `data.{current_page,last_page,total_items}`, all plain integers). A consumer whose pagination metadata needs a richer numeric type (e.g. formatted/localized numbers) writes its own sibling trait instead of extending this one — see NAP's `PaginationGenesisTrait` for a worked example.
+
+### Configuration
+
+Publish the config with `php artisan vendor:publish --tag=laravel-utilities-config` (or copy `config/laravel-utilities.php` from the package). The `mcp` block:
+
+```php
+'mcp' => [
+    // Auto-detects laravel/mcp; only pays the cost of the rate limiter/config validation when true.
+    'enabled' => env('LARAVEL_UTILITIES_MCP_ENABLED', class_exists(\Laravel\Mcp\Server::class)),
+
+    // Must implement McpScopeAuthorizerInterface. Null = unrestricted writes.
+    'scope_authorizer' => null,
+
+    'errors' => [
+        'resolver' => \Labelgrup\LaravelUtilities\AI\Mcp\Tools\Errors\DefaultToolErrorResolver::class,
+        'exposed_exceptions' => [
+            // FQCNs whose ->getMessage() is safe to expose to the MCP client.
+        ],
+    ],
+
+    'rate_limit' => [
+        'per_minute' => env('MCP_RATE_LIMIT_PER_MINUTE', 60),
+        'whitelist_ips' => [],
+    ],
+],
+```
+
+When `mcp.enabled` is true, `LaravelUtilitiesServiceProvider` registers a named `mcp` rate limiter (`RateLimiter::for('mcp', ...)`, throwing `CustomException` with `AI-MCP-RATELIMIT-0001` on `HTTP_TOO_MANY_REQUESTS`) and validates the config — a consumer only needs to apply `throttle:mcp` to its own MCP route(s).
+
+### Claude Code skills installer
+
+The package ships two Claude Code skills under `skills/Mcp/` (`mcp-tool-builder`, `mcp-tool-reviewer`) to help build/review Tools against the conventions above. Publishing them is opt-in — deliberately not a Composer Plugin, so it never runs (or requires trust-gate approval) on every consumer's `composer install`/`update`, only when a project actually wants them.
+
+When `mcp.enabled` is true, `LaravelUtilitiesServiceProvider::publishSkills()` registers each `skills/Mcp/<name>` for publishing under the `laravel-utilities-skills` tag:
+
+```bash
+php artisan vendor:publish --tag=laravel-utilities-skills
+```
+
+This copies each skill into the consuming project's `.claude/skills/<name>`. Like any Laravel `publishes()` call, existing files at the target are left untouched unless `--force` is passed.
 
 ---
 
