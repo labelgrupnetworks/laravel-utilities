@@ -215,6 +215,15 @@ explícitamente.
       hardcoded en la Tool) antes de corregir nada.
 - [ ] Comparación campo a campo hecha con evidencia citada `fichero:línea` de ambos
       lados — ningún hallazgo basado en suposición o similitud de nombre.
+- [ ] Anotaciones MCP (`IsReadOnly`/`IsDestructive`/`IsIdempotent`/`IsOpenWorld`)
+      verificadas como explícitas y correctas — nunca omitidas (los defaults del spec
+      son peligrosos: `IsDestructive`→`true`, `IsIdempotent`→`false`,
+      `IsOpenWorld`→`true` si faltan) ni copiadas por intuición del nombre del
+      método. `IsIdempotent` se fija solo tras rastrear el UseCase/SDK real hasta
+      encontrar (o descartar) una excepción de precondición al repetir la misma
+      llamada — ver criterio y ejemplo genérico en `mcp-tool-builder`. Si el SDK es
+      opaco (sin check local ni visibilidad del lado servidor), no asumas — pregunta
+      al usuario.
 - [ ] Si hay desfase: corregido en el sitio correcto, con el mismo rigor de
       `mcp-tool-builder` (tipos, modificadores, nullability, rastreo de adapters/casts
       externos si aplica) — no solo el campo que faltaba, todo el shape

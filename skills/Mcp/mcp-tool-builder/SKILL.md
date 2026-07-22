@@ -417,6 +417,66 @@ documentación del servicio externo — se lee el código del adapter/SDK que lo
    adapter padre distinto, la clase de schema se reutiliza también en vez de duplicarse
    a mano.
 
+## Anotaciones MCP obligatorias (`IsReadOnly`/`IsDestructive`/`IsIdempotent`/`IsOpenWorld`)
+
+Los 4 atributos de `Laravel\Mcp\Server\Tools\Annotations` **nunca se omiten** — el
+spec MCP asigna un default cuando falta uno, y esos defaults son peligrosos en la
+dirección equivocada para casi cualquier Tool real:
+
+| Atributo | Default si se omite |
+|---|---|
+| `IsReadOnly` | `false` |
+| `IsDestructive` | **`true`** |
+| `IsIdempotent` | **`false`** |
+| `IsOpenWorld` | **`true`** |
+
+Es decir: una Tool de escritura sin anotar se presenta a un cliente/agente MCP como
+"destructiva y no repetible" aunque sea un `update` inofensivo, y una Tool 100% local
+se presenta como "habla con el exterior" aunque no llame a nada fuera de la BD.
+Declara siempre los 4 de forma explícita (`#[IsDestructive(false)]`, no omitir el
+atributo).
+
+- **`IsReadOnly` + `IsOpenWorld`**: en toda Tool, sin excepción.
+- **`IsDestructive` + `IsIdempotent`**: solo tienen información real en Tools de
+  escritura (spec: "only meaningful when not read-only") — omítelos en Tools de solo
+  lectura.
+
+### `IsOpenWorld`
+
+`true` si el Controller/UseCase llama a un SDK o servicio externo real (integración
+de terceros, microservicio propio fuera del proceso, cualquier llamada de red a un
+sistema que el Tool no controla). `false` si es Eloquent/BD local puro, sin SDK
+externo de por medio. Un motor de búsqueda propio del mismo dominio (Elasticsearch/
+Scout sobre datos propios) normalmente se trata como closed-world — es infra propia,
+no una entidad de negocio externa — pero es una decisión de negocio del proyecto
+concreto, no la asumas sin confirmarla si no está ya decidida.
+
+### `IsDestructive` — solo en write-tools
+
+`true` si la operación borra/cancela/revoca de forma irreversible (`Destroy`,
+`Cancel`, `Revoke`, y un `Sync`/reemplazo completo cuando puede eliminar entradas
+existentes). `false` en el resto de writes que no borran nada.
+
+### `IsIdempotent` — nunca por el nombre del método, siempre por evidencia de código
+
+**Regla de oro: no asumas idempotencia por lo que suena razonable ("un `update`
+debería ser idempotente", "un `extend` seguramente no acumula") — busca si el
+UseCase o el SDK lanza una excepción de precondición cuando se repite la misma
+llamada con los mismos argumentos.** Si lanza excepción en la 2ª llamada (aunque el
+estado final del servidor sería el mismo), es **no idempotente** — un agente
+reintentando vería un error, no un no-op silencioso.
+
+Ejemplo genérico de este patrón: una acción `extend()`/`give()`/`destroy()` cuyo
+UseCase comprueba primero una precondición ("¿ya está extendido?", "¿ya tiene este
+permiso?", "¿existe todavía?") y lanza excepción si no se cumple — eso la hace no
+idempotente aunque el nombre sugiera lo contrario. Compárala con un `sync()`/
+`replace()` que no tiene ese guard y simplemente sobreescribe el estado completo —
+ese sí es idempotente de verdad. Si la comprobación real vive del lado de un SDK/
+servicio externo sin visibilidad local (el UseCase delega y no hay guard propio antes
+de la llamada), el dato es opaco — no lo adivines, pregúntaselo directamente al
+usuario con la evidencia concreta que sí tienes (qué parámetros viajan, qué valida
+localmente, qué no).
+
 ## Paso 4 — Registrar la Tool
 
 Añade la clase al array `$tools` de tu servidor MCP (`extends Laravel\Mcp\Server`),
@@ -463,8 +523,12 @@ nunca contra datos reales, salvo que la tarea especifique otra cosa explícitame
       adivinado.
 - [ ] Nullability de cada campo externo rastreada hasta el cast/adapter concreto, no
       copiada de otro campo por similitud de nombre.
-- [ ] Atributos `#[Name]`/`#[Title]`/`#[Description]` presentes; `#[IsReadOnly]` solo si
-      no hay efectos secundarios.
+- [ ] Atributos `#[Name]`/`#[Title]`/`#[Description]` presentes.
+- [ ] Las 4 anotaciones MCP explícitas, nunca omitidas (ver sección "Anotaciones MCP
+      obligatorias"): `#[IsReadOnly]` + `#[IsOpenWorld]` siempre; `#[IsDestructive]` +
+      `#[IsIdempotent]` en toda write-tool. `IsIdempotent` fijado solo tras leer el
+      UseCase/SDK real en busca de una excepción de precondición al repetir la
+      llamada — nunca por intuición del nombre del método.
 - [ ] Tool registrada en el servidor MCP correspondiente.
 - [ ] `vendor/bin/pint --dirty --format agent` y `php -l` pasan limpios.
 - [ ] Si toca lógica de negocio no trivial nueva: tests + actualización de documentación
