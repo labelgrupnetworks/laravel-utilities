@@ -4,7 +4,7 @@ namespace Labelgrup\LaravelUtilities\AI\Mcp\Tools\DTO;
 
 use Labelgrup\LaravelUtilities\Core\UseCases\UseCase;
 
-final class UseCaseDTO
+class UseCaseDTO
 {
     public function __construct(
         public UseCase $use_case,

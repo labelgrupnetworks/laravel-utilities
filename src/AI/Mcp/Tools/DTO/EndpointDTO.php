@@ -2,7 +2,7 @@
 
 namespace Labelgrup\LaravelUtilities\AI\Mcp\Tools\DTO;
 
-final class EndpointDTO
+class EndpointDTO
 {
     /**
      * @param  array<int, string>  $params  Scalar route param names, resolved via $request->get($param).
