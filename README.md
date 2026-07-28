@@ -404,6 +404,7 @@ Labelgrup\LaravelUtilities\AI\Mcp\
 │  └─ Traits/PaginationTrait                     ← generic paginated-output schema (integers only)
 └─ Tools/
    ├─ Abstracts/{ControllerTool, UseCaseTool}    ← the two Tool bases
+   ├─ Attributes/RequestClass                    ← declares a UseCaseTool's validating FormRequest
    ├─ DTO/{EndpointDTO, UseCaseDTO}
    ├─ Errors/DefaultToolErrorResolver
    ├─ Interfaces/{ControllerToolInterface, UseCaseToolInterface, ToolErrorResolverInterface,
@@ -435,19 +436,25 @@ class SearchProductTool extends ControllerTool
 
 `request` is nullable (no-FormRequest methods are called with no arguments). The controller's own validation, guards and permission checks apply for free — the Tool never bypasses them.
 
-**`UseCaseTool`** calls a use case directly, without an HTTP controller in between. The Tool declares a `UseCaseDTO` (the use case instance + `responseToApi()` flags):
+**`UseCaseTool`** calls a use case directly, without an HTTP controller in between. The Tool declares a `UseCaseDTO` (the use case instance + `responseToApi()` flags). Optionally, a `#[RequestClass(SomeFormRequest::class)]` class attribute tells `handle()` which `FormRequest`'s `rules()` validate the incoming MCP arguments before `useCase()` runs:
 
 ```php
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Abstracts\UseCaseTool;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Attributes\RequestClass;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\DTO\UseCaseDTO;
 
+#[RequestClass(SearchProductRequest::class)]
 class SearchProductTool extends UseCaseTool
 {
     public function useCase(Request $request): UseCaseDTO
     {
-        $validated = $request->validate((new SearchProductRequest)->rules());
-
-        return new UseCaseDTO(use_case: new SearchProductsUseCase($validated), response_simplified: true);
+        return new UseCaseDTO(
+            use_case: new SearchProductsUseCase(
+                query: $request->get('query'),
+                page: $request->get('page', 1),
+            ),
+            response_simplified: true
+        );
     }
 
     public function schema(JsonSchema $schema): array
@@ -457,7 +464,9 @@ class SearchProductTool extends UseCaseTool
 }
 ```
 
-`useCase()` runs inside the response wrapper, so its own validation/construction errors are mapped cleanly. Note that `handle()`'s default flow calls `$use_case->handle()->responseToApi(...)` — the use case's own business exceptions are swallowed into a `JsonResponse` by `UseCase::handle()` before ever reaching the error resolver below. A Tool that wants a business exception to reach the error resolver raw must override `handle()` and call `perform()`/`action()` directly instead.
+`useCase()` runs inside the response wrapper, so its own validation/construction errors are mapped cleanly. When `#[RequestClass]` is present, `handle()` validates `$request` against that `FormRequest`'s `rules()` via `Laravel\Mcp\Request::validate()` and merges the validated (and defaulted) data back into `$request` — so `useCase()` reads already-validated values via `$request->get(...)`, with `useCase()`'s own signature never tied to the concrete `FormRequest` class. A validation failure throws `ValidationException` before `useCase()` runs, mapped the same way as any other error below. A Tool without the attribute skips this step entirely — `useCase()` is free to validate however it likes, or not at all. Note that `handle()`'s default flow calls `$use_case->handle()->responseToApi(...)` — the use case's own business exceptions are swallowed into a `JsonResponse` by `UseCase::handle()` before ever reaching the error resolver below. A Tool that wants a business exception to reach the error resolver raw must override `handle()` and call `perform()`/`action()` directly instead.
+
+`useCase()` isn't limited to `$request->get(...)`: `$this->resolveRequestClass($request)` builds, container-resolves and validates a populated instance of the declared `#[RequestClass]` `FormRequest` (mirroring `ControllerTool::formRequest()` — `setContainer()`, `setRedirector()`, `validateResolved()`), so `->validated()`, `->authorize()` and any container-dependent getters/rules on that `FormRequest` all work, and a Tool can call it inside `useCase()` for typed getters/accessors instead of reading raw array keys off `$request`. It returns `$request` unchanged when no `#[RequestClass]` is declared. This is opt-in and independent of `handle()`'s automatic validation step — calling both against the same `#[RequestClass]` re-runs `rules()` a second time (harmless against already-validated, defaulted data, but redundant work).
 
 A consumer needing a third input shape (e.g. `Spatie\LaravelData\Data` objects) implements its own sibling of these two — see NAP's `DataObjectControllerTool` for a worked example — rather than this package trying to cover every possible input shape.
 
