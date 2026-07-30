@@ -38,6 +38,7 @@ The package is automatically registered through Laravel's package discovery.
   - [Response & error mapping](#response--error-mapping)
   - [Scope authorization](#scope-authorization)
   - [Input/output schemas](#inputoutput-schemas)
+  - [Tools schema catalog & version snapshot](#tools-schema-catalog--version-snapshot)
   - [Configuration](#configuration)
   - [Claude Code skills installer](#claude-code-skills-installer)
 
@@ -402,14 +403,21 @@ Labelgrup\LaravelUtilities\AI\Mcp\
 │  ├─ Attributes/{Schema, OutputSchema}          ← declare a Tool's input/output schema by class reference
 │  ├─ Interfaces/{SchemaInterface, OutputSchemaInterface}
 │  └─ Traits/PaginationTrait                     ← generic paginated-output schema (integers only)
-└─ Tools/
-   ├─ Abstracts/{ControllerTool, UseCaseTool}    ← the two Tool bases
-   ├─ Attributes/RequestClass                    ← declares a UseCaseTool's validating FormRequest
-   ├─ DTO/{EndpointDTO, UseCaseDTO}
-   ├─ Errors/DefaultToolErrorResolver
-   ├─ Interfaces/{ControllerToolInterface, UseCaseToolInterface, ToolErrorResolverInterface,
-   │  ToolErrorResponseBuilderInterface, McpScopeAuthorizerInterface}
-   └─ Resolvers/{ResolvesToolResponse, ResolvesToolSchemas}
+├─ Tools/
+│  ├─ Abstracts/{ControllerTool, UseCaseTool}    ← the two Tool bases
+│  ├─ Attributes/RequestClass                    ← declares a UseCaseTool's validating FormRequest
+│  ├─ DTO/{EndpointDTO, UseCaseDTO}
+│  ├─ Errors/DefaultToolErrorResolver
+│  ├─ Interfaces/{ControllerToolInterface, UseCaseToolInterface, ToolErrorResolverInterface,
+│  │  ToolErrorResponseBuilderInterface, McpScopeAuthorizerInterface}
+│  └─ Resolvers/{ResolvesToolResponse, ResolvesToolSchemas}
+└─ Resources/
+   ├─ ServerToolResolver                         ← reads a Server's $tools without instantiating it
+   ├─ ToolsSchemaCatalogBuilder                  ← builds the tools+schemas catalog for one server
+   └─ Abstracts/AbstractToolsSchemaCatalogResource ← Resource base wiring the two above together
+
+Labelgrup\LaravelUtilities\Commands\
+└─ McpToolsSchemaSnapshot                        ← `mcp:tools:schema-snapshot` Artisan command
 ```
 
 ### Tool bases: ControllerTool & UseCaseTool
@@ -500,6 +508,28 @@ A consumer can add business exceptions to `exposed_exceptions` with zero code ch
 
 `PaginationTrait::paginationOutputSchema()` provides a generic paginated-output shape (`items` + `data.{current_page,last_page,total_items}`, all plain integers). A consumer whose pagination metadata needs a richer numeric type (e.g. formatted/localized numbers) writes its own sibling trait instead of extending this one — see NAP's `PaginationGenesisTrait` for a worked example.
 
+### Tools schema catalog & version snapshot
+
+`ServerToolResolver::toolClasses(ServerClass::class)` reads a `Server` subclass's `$tools` default property via reflection, without instantiating it — `Laravel\Mcp\Server::__construct()` requires a real `Transport`, only available inside an actual MCP request. `ToolsSchemaCatalogBuilder::build($tool_classes, ?$decorate)` turns that list into a catalog (`['tools' => [...]]`, sorted by name) by reusing each Tool's own `toArray()` — the same shape a real MCP client sees in `tools/list` — with a fixed key order and all 4 MCP annotation hints always explicit, so two catalogs diff cleanly. Never pre-filter `$tool_classes` by a per-caller eligibility/scope check before passing it in — that would make the catalog vary by reader.
+
+`AbstractToolsSchemaCatalogResource` (extends `Laravel\Mcp\Server\Resource`) wires both together for exposing the catalog live, as an MCP Resource, on any server:
+
+```php
+use Labelgrup\LaravelUtilities\AI\Mcp\Resources\Abstracts\AbstractToolsSchemaCatalogResource;
+
+class MyServerToolsSchemaCatalogResource extends AbstractToolsSchemaCatalogResource
+{
+    protected function serverClass(): string
+    {
+        return MyServer::class;
+    }
+}
+```
+
+Register it on the target server's `$resources`. A consuming project that wants to enrich each entry (e.g. a domain grouping derived from the tool's namespace, or scope metadata) overrides the protected `decorateEntry(array $entry, string $tool_class): array` hook — identity by default, so overriding is opt-in and never required.
+
+For a git-diffable history of tool/schema changes across commits, `php artisan mcp:tools:schema-snapshot {server?}` writes the same catalog to a tracked JSON file per configured server (`config('laravel-utilities.mcp.servers')`, a `slug => ['class' => Server::class, 'schema_snapshot_path' => '...']` map — empty by default, so a consumer must configure it; omit `{server}` to regenerate all). Each server writes to its own `schema_snapshot_path` (defaults to `storage_path('app/mcp-tools-schema-snapshots')` when a server entry omits it — a consuming project typically points each server at a path of its own choosing, e.g. next to that server's own Resources), as `{slug}-server-tools-schema-catalog.json`.
+
 ### Configuration
 
 Publish the config with `php artisan vendor:publish --tag=laravel-utilities-config` (or copy `config/laravel-utilities.php` from the package). The `mcp` block:
@@ -511,6 +541,17 @@ Publish the config with `php artisan vendor:publish --tag=laravel-utilities-conf
 
     // Must implement McpScopeAuthorizerInterface. Null = unrestricted writes.
     'scope_authorizer' => null,
+
+    // Servers snapshotted by `mcp:tools:schema-snapshot`, keyed by a short slug
+    // (used as both the CLI argument and the snapshot filename). Empty by default.
+    // 'schema_snapshot_path' is optional per entry — defaults to
+    // storage_path('app/mcp-tools-schema-snapshots') when omitted.
+    'servers' => [
+        // 'my-server' => [
+        //     'class' => \App\Mcp\Servers\MyServer::class,
+        //     'schema_snapshot_path' => app_path('Mcp/Resources/snapshots'),
+        // ],
+    ],
 
     'errors' => [
         'resolver' => \Labelgrup\LaravelUtilities\AI\Mcp\Tools\Errors\DefaultToolErrorResolver::class,

@@ -25,7 +25,8 @@ class LaravelUtilitiesServiceProvider extends \Illuminate\Support\ServiceProvide
 
         $this->commands([
             \Labelgrup\LaravelUtilities\Commands\MakeApiRequest::class,
-            \Labelgrup\LaravelUtilities\Commands\MakeUseCase::class
+            \Labelgrup\LaravelUtilities\Commands\MakeUseCase::class,
+            \Labelgrup\LaravelUtilities\Commands\McpToolsSchemaSnapshot::class,
         ]);
     }
 

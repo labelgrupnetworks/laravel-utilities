@@ -14,6 +14,18 @@ return [
          */
         'scope_authorizer' => null,
 
+        /**
+         * MCP servers to snapshot via `mcp:tools:schema-snapshot`, keyed by a
+         * short slug (used both as the CLI argument and the snapshot filename).
+         * Each entry:
+         *   - 'class' (required): a \Laravel\Mcp\Server\Server subclass.
+         *   - 'schema_snapshot_path' (optional): directory for that server's
+         *     JSON snapshot, meant to be tracked in git for diffing tool/schema
+         *     changes across commits. Defaults to storage_path('app/mcp-tools-schema-snapshots')
+         *     when omitted.
+         */
+        'servers' => [],
+
         'errors' => [
             /**
              * Class resolving exceptions to MCP tool error responses.
