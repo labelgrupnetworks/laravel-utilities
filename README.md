@@ -35,6 +35,8 @@ The package is automatically registered through Laravel's package discovery.
   - [SlugRule](#slugrule)
 - [MCP Tools (`AI\Mcp`)](#-mcp-tools-aimcp)
   - [Tool bases: ControllerTool & UseCaseTool](#tool-bases-controllertool--usecasetool)
+  - [OrchestratorTool](#orchestratortool)
+  - [Tool name resolution](#tool-name-resolution)
   - [Response & error mapping](#response--error-mapping)
   - [Scope authorization](#scope-authorization)
   - [Input/output schemas](#inputoutput-schemas)
@@ -404,13 +406,16 @@ Labelgrup\LaravelUtilities\AI\Mcp\
 │  ├─ Interfaces/{SchemaInterface, OutputSchemaInterface}
 │  └─ Traits/PaginationTrait                     ← generic paginated-output schema (integers only)
 ├─ Tools/
-│  ├─ Abstracts/{ControllerTool, UseCaseTool}    ← the two Tool bases
-│  ├─ Attributes/RequestClass                    ← declares a UseCaseTool's validating FormRequest
+│  ├─ Abstracts/{ControllerTool, UseCaseTool, OrchestratorTool} ← the three Tool bases
+│  ├─ Attributes/RequestClass                    ← declares a validating FormRequest for UseCaseTool/OrchestratorTool
 │  ├─ DTO/{EndpointDTO, UseCaseDTO}
+│  ├─ Enums/OrchestratorFailureStage             ← PREPARATION/EXECUTE/UNKNOWN, reported as failure_stage in OrchestratorTool's error response
+│  ├─ Enums/OrchestratorFailureType              ← VALIDATION/CONTROLLED/SYSTEM + description(), reported as failure_type in OrchestratorTool's error response
 │  ├─ Errors/DefaultToolErrorResolver
+│  ├─ Exceptions/OrchestratorToolException       ← lets prepare()/execute() declare failure_stage/suggested_tool explicitly
 │  ├─ Interfaces/{ControllerToolInterface, UseCaseToolInterface, ToolErrorResolverInterface,
-│  │  ToolErrorResponseBuilderInterface, McpScopeAuthorizerInterface}
-│  └─ Resolvers/{ResolvesToolResponse, ResolvesToolSchemas}
+│  │  ToolErrorResponseBuilderInterface, McpScopeAuthorizerInterface, ExternalResourceExceptionInterface}
+│  └─ Resolvers/{ResolvesToolResponse, ResolvesToolSchemas, ResolvesRequestClass, ResolvesToolName}
 └─ Resources/
    ├─ ServerToolResolver                         ← reads a Server's $tools without instantiating it
    ├─ ToolsSchemaCatalogBuilder                  ← builds the tools+schemas catalog for one server
@@ -444,7 +449,7 @@ class SearchProductTool extends ControllerTool
 
 `request` is nullable (no-FormRequest methods are called with no arguments). The controller's own validation, guards and permission checks apply for free — the Tool never bypasses them.
 
-**`UseCaseTool`** calls a use case directly, without an HTTP controller in between. The Tool declares a `UseCaseDTO` (the use case instance + `responseToApi()` flags). Optionally, a `#[RequestClass(SomeFormRequest::class)]` class attribute tells `handle()` which `FormRequest`'s `rules()` validate the incoming MCP arguments before `useCase()` runs:
+**`UseCaseTool`** calls a use case directly, without an HTTP controller in between. The Tool declares a `UseCaseDTO` (the use case instance + `responseToApi()` flags). Optionally, a `#[RequestClass(SomeFormRequest::class)]` class attribute tells `handle()` which `FormRequest`'s `rules()` validate the incoming MCP arguments before `useCase()` runs — this mechanism lives in the shared `ResolvesRequestClass` trait, so it's available on `OrchestratorTool` too (see below), not just `UseCaseTool`:
 
 ```php
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Abstracts\UseCaseTool;
@@ -476,7 +481,73 @@ class SearchProductTool extends UseCaseTool
 
 `useCase()` isn't limited to `$request->get(...)`: `$this->resolveRequestClass($request)` builds, container-resolves and validates a populated instance of the declared `#[RequestClass]` `FormRequest` (mirroring `ControllerTool::formRequest()` — `setContainer()`, `setRedirector()`, `validateResolved()`), so `->validated()`, `->authorize()` and any container-dependent getters/rules on that `FormRequest` all work, and a Tool can call it inside `useCase()` for typed getters/accessors instead of reading raw array keys off `$request`. It returns `$request` unchanged when no `#[RequestClass]` is declared. This is opt-in and independent of `handle()`'s automatic validation step — calling both against the same `#[RequestClass]` re-runs `rules()` a second time (harmless against already-validated, defaulted data, but redundant work).
 
+Both `resolveRequestClass()` and the automatic pre-validation step are implemented once, in the `ResolvesRequestClass` trait, and composed into both `UseCaseTool` and `OrchestratorTool` — a Tool built on either base gets identical `#[RequestClass]` behavior.
+
 A consumer needing a third input shape (e.g. `Spatie\LaravelData\Data` objects) implements its own sibling of these two — see NAP's `DataObjectControllerTool` for a worked example — rather than this package trying to cover every possible input shape.
+
+### OrchestratorTool
+
+For a business intent that chains several use cases in one MCP call, `OrchestratorTool` splits the work into a side-effect-free `prepare()` and an `execute()` that may or may not mutate, so a failure reports whether anything was actually written:
+
+```php
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Abstracts\OrchestratorTool;
+use Laravel\Mcp\Request;
+use Laravel\Mcp\Response;
+use Laravel\Mcp\ResponseFactory;
+
+class CheckoutCartTool extends OrchestratorTool
+{
+    protected function prepare(Request $request): mixed
+    {
+        // resolve/validate everything needed, no side effects
+        return $cart;
+    }
+
+    protected function execute(Request $request, mixed $prepared): Response|ResponseFactory
+    {
+        // mutate — place the order
+        return Response::structured($order);
+    }
+}
+```
+
+Read-only tools still fit this shape: do the real work in `prepare()` and make `execute()` a trivial `return Response::structured($prepared);`.
+
+`handle()` catches any `Throwable` from either phase and reports it via `Response::error(json_encode([...]))`, whose JSON body carries three machine-readable fields alongside the human-readable `error` message:
+
+- **`failure_stage`** (`OrchestratorFailureStage::{PREPARATION,EXECUTE}`) — whether `prepare()` (nothing written yet) or `execute()` failed. An exception implementing the empty marker `ExternalResourceExceptionInterface` (a consumer-defined interface — this package can't reference any project's domain exceptions directly) is instead reported as `UNKNOWN`, for calls to an external resource whose actual outcome is unknown (e.g. a timeout after the request was already sent).
+- **`failure_type`** (`OrchestratorFailureType::{VALIDATION,CONTROLLED,SYSTEM}`) — *why* it failed, independent of *when*: `VALIDATION` for a `ValidationException` raised by the `#[RequestClass]` step, `CONTROLLED` for an `OrchestratorToolException` the Tool raised deliberately (see below), `SYSTEM` for everything else (a generic `Throwable` or `ExternalResourceExceptionInterface`). Its `description()` method returns an AI-readable explanation of that category — e.g. whether retrying or fixing the input is likely to help — meant to be read by the LLM driving the MCP client, not just a human.
+- **`suggested_tool`** — see the `suggestedTool()` hook below.
+
+`OrchestratorTool` shares `UseCaseTool`'s `#[RequestClass]` support via the same `ResolvesRequestClass` trait: a `#[RequestClass(SomeFormRequest::class)]` class attribute makes `handle()` validate `$request` against that `FormRequest`'s `rules()` — merging the validated (and defaulted) data back into `$request` — as the very first step, before `prepare()` runs. A validation failure throws `ValidationException` before either phase, so nothing has been prepared or written yet. `prepare()`/`execute()` can also call `$this->resolveRequestClass($request)` to get a fully-bound `FormRequest` instance for typed getters/accessors, exactly as documented above for `UseCaseTool`.
+
+Two optional escape hatches, both opt-in:
+
+- **`suggestedTool(Throwable $e): ?string`** — override this hook to point the caller at another Tool that would fix the error (e.g. "product not found" → `products_search`); returns `null` by default, reported as `suggested_tool` either way (`null` when there's nothing to suggest).
+- **`OrchestratorToolException`** — throw it from inside `prepare()`/`execute()` when the code already knows the exact `failure_stage`/`suggested_tool` to report, overriding the phase-based inference above. Its `failure_type` is always `CONTROLLED`, since raising this exception is itself the Tool declaring "this is a known, expected failure":
+
+```php
+throw new OrchestratorToolException(
+    message: 'Fedicom order rejected: out of stock',
+    stage: OrchestratorFailureStage::EXECUTE,
+    suggested_tool: 'products_search'
+);
+```
+
+`handle()` catches it before the generic `Throwable`/`ExternalResourceExceptionInterface` cases in both phases, and reads its `stage`/`suggested_tool` properties directly.
+
+### Tool name resolution
+
+All three bases mix in `ResolvesToolName`, exposing a static `toolName(): string` that reads the Tool's own `#[Name]` attribute via reflection — falling back to `Str::kebab(class_basename())` when the attribute is absent, mirroring `Laravel\Mcp\Server\Primitive::name()`'s own fallback. Being static, it doesn't require instantiating the Tool, so another Tool's schema/description can reference "the tool named X" without hardcoding the string and going stale on a rename:
+
+```php
+use App\Mcp\Tools\Brands\ListTool as BrandsListTool;
+
+$brands_tool_name = BrandsListTool::toolName();
+
+'filter_brands' => $schema->array()->items($schema->integer())
+    ->description("Filter by brand IDs. You can get the list of available brands from the `{$brands_tool_name}` tool."),
+```
 
 ### Response & error mapping
 
