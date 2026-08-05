@@ -57,12 +57,13 @@ abstract class OrchestratorTool extends Tool implements ToolErrorResponseBuilder
         } catch (ExternalResourceExceptionInterface $exception) {
             return $this->failure(
                 exception: $exception,
+                error: $exception->getMessage(),
                 stage: OrchestratorFailureStage::UNKNOWN,
                 type: OrchestratorFailureType::SYSTEM,
                 suggested_tool: $this->suggestedTool($exception)
             );
         } catch (Throwable $exception) {
-            return $this->failure($exception, OrchestratorFailureStage::EXECUTE, OrchestratorFailureType::SYSTEM, $this->suggestedTool($exception));
+            return $this->failure($exception, $exception->getMessage(), OrchestratorFailureStage::EXECUTE, OrchestratorFailureType::SYSTEM, $this->suggestedTool($exception));
         }
     }
 
@@ -99,14 +100,15 @@ abstract class OrchestratorTool extends Tool implements ToolErrorResponseBuilder
     private function failureDefault(
         Throwable $exception,
         OrchestratorFailureStage $stage,
+        OrchestratorFailureType $type,
         ?string $suggested_tool = null
     ): Response {
         return $this->failure(
             exception: $exception,
             error: (string) $this->errorResponse($exception)->content(),
-            stage: $exception->stage,
-            type: OrchestratorFailureType::SYSTEM,
-            suggested_tool: $exception->suggested_tool
+            stage: $stage,
+            type: $type,
+            suggested_tool: $suggested_tool
         );
     }
 
@@ -114,7 +116,7 @@ abstract class OrchestratorTool extends Tool implements ToolErrorResponseBuilder
     {
         return $this->failure(
             exception: $exception,
-            error: $exception->message(),
+            error: $exception->getMessage(),
             stage: $exception->stage,
             type: OrchestratorFailureType::CONTROLLED,
             suggested_tool: $exception->suggested_tool
