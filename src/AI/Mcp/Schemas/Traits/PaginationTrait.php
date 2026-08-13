@@ -11,11 +11,13 @@ trait PaginationTrait
         JsonSchema $schema,
         ObjectType $item_schema,
         ?string $items_description = null,
-        ?string $total_items_description = null
+        ?string $total_items_description = null,
+        string $items_parameter = 'items',
+        string $pagination_parameter = 'data'
     ): array {
         return [
-            'items' => $schema->array()->items($item_schema)->description($items_description ?? 'List of items.'),
-            'data' => $schema->object([
+            $items_parameter => $schema->array()->items($item_schema)->description($items_description ?? 'List of items.'),
+            $pagination_parameter => $schema->object([
                 'current_page' => $schema->integer()->description('Current page number.'),
                 'last_page' => $schema->integer()->description('Last page number.'),
                 'total_items' => $schema->integer()->description($total_items_description ?? 'Total number of items.')
