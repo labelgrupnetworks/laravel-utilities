@@ -29,6 +29,7 @@ use Throwable;
  */
 abstract class OrchestratorTool extends Tool implements ToolErrorResponseBuilderInterface
 {
+    use NormalizesNullableSchemaTypes;
     use ResolvesRequestClass;
     use ResolvesToolName;
     use ResolvesToolResponse;

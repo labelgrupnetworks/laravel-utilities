@@ -15,6 +15,7 @@ use Laravel\Mcp\Server\Tool;
 
 abstract class UseCaseTool extends Tool implements ToolErrorResponseBuilderInterface, UseCaseToolInterface
 {
+    use NormalizesNullableSchemaTypes;
     use ResolvesRequestClass;
     use ResolvesToolName;
     use ResolvesToolResponse;

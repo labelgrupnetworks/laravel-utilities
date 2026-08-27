@@ -16,6 +16,7 @@ use Laravel\Mcp\Server\Tool;
 
 abstract class ControllerTool extends Tool implements ControllerToolInterface, ToolErrorResponseBuilderInterface
 {
+    use NormalizesNullableSchemaTypes;
     use ResolvesToolName;
     use ResolvesToolResponse;
     use ResolvesToolSchemas;
