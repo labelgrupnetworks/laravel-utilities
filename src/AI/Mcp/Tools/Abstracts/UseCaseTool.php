@@ -4,6 +4,7 @@ namespace Labelgrup\LaravelUtilities\AI\Mcp\Tools\Abstracts;
 
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolErrorResponseBuilderInterface;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\UseCaseToolInterface;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\NormalizesNullableSchemaTypes;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesRequestClass;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolName;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolResponse;

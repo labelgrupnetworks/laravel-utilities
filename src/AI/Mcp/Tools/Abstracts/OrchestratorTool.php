@@ -8,6 +8,7 @@ use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Enums\OrchestratorFailureType;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Exceptions\OrchestratorToolException;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ExternalResourceExceptionInterface;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolErrorResponseBuilderInterface;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\NormalizesNullableSchemaTypes;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesRequestClass;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolName;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolResponse;
