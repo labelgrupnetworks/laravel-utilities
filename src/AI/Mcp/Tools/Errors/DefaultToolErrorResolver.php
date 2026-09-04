@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolErrorResolverInterface;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolErrorResponseBuilderInterface;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\FormatsValidationFailure;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
@@ -16,6 +17,8 @@ use Throwable;
 
 class DefaultToolErrorResolver implements ToolErrorResolverInterface
 {
+    use FormatsValidationFailure;
+
     public function resolve(Throwable $exception, ToolErrorResponseBuilderInterface $tool): Response|ResponseFactory
     {
         $handled = $this->toJsonResponse($exception);
@@ -70,9 +73,9 @@ class DefaultToolErrorResolver implements ToolErrorResolverInterface
     }
 
     /**
-     * Shared by both raw ValidationException (DataObjectControllerTool/Spatie Data)
-     * and HttpResponseException-wrapped validation (ControllerTool/ApiRequest::failedValidation())
-     * so a field name is never lost regardless of which path produced the error.
+     * Used for HttpResponseException-wrapped validation (ControllerTool/ApiRequest::failedValidation()),
+     * where only the already-rendered message strings are available (no validator instance to
+     * read failed rules/parameters from — see FormatsValidationFailure for that case).
      *
      * @param  array<string, array<string>>  $errors
      */
@@ -94,7 +97,7 @@ class DefaultToolErrorResolver implements ToolErrorResolverInterface
     {
         if ($exception instanceof ValidationException) {
             return response()->json(
-                ['error' => $this->formatValidationErrors($exception->errors())],
+                ['error' => $this->formatValidationFailure($exception)],
                 HttpFoundationResponse::HTTP_UNPROCESSABLE_ENTITY
             );
         }

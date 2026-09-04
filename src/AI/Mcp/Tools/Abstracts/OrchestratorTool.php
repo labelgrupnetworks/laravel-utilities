@@ -8,6 +8,7 @@ use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Enums\OrchestratorFailureType;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Exceptions\OrchestratorToolException;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ExternalResourceExceptionInterface;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolErrorResponseBuilderInterface;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\FormatsValidationFailure;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\NormalizesNullableSchemaTypes;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesRequestClass;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolName;
@@ -30,6 +31,7 @@ use Throwable;
  */
 abstract class OrchestratorTool extends Tool implements ToolErrorResponseBuilderInterface
 {
+    use FormatsValidationFailure;
     use NormalizesNullableSchemaTypes;
     use ResolvesRequestClass;
     use ResolvesToolName;
@@ -131,7 +133,7 @@ abstract class OrchestratorTool extends Tool implements ToolErrorResponseBuilder
     ): Response {
         return $this->failure(
             exception: $exception,
-            error: $exception->errors(),
+            error: $this->formatValidationFailure($exception),
             stage: $stage,
             type: OrchestratorFailureType::VALIDATION
         );
