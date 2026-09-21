@@ -6,6 +6,7 @@ use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolErrorResponseBuilderI
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\UseCaseToolInterface;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\NormalizesNullableSchemaTypes;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesRequestClass;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolAuthorization;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolName;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolResponse;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolSchemas;
@@ -18,6 +19,7 @@ abstract class UseCaseTool extends Tool implements ToolErrorResponseBuilderInter
 {
     use NormalizesNullableSchemaTypes;
     use ResolvesRequestClass;
+    use ResolvesToolAuthorization;
     use ResolvesToolName;
     use ResolvesToolResponse;
     use ResolvesToolSchemas;

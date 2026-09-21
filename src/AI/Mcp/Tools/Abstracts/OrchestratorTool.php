@@ -10,6 +10,7 @@ use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ExternalResourceException
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolErrorResponseBuilderInterface;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\FormatsValidationFailure;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\NormalizesNullableSchemaTypes;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolAuthorization;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesRequestClass;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolName;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolResponse;
@@ -34,6 +35,7 @@ abstract class OrchestratorTool extends Tool implements ToolErrorResponseBuilder
     use FormatsValidationFailure;
     use NormalizesNullableSchemaTypes;
     use ResolvesRequestClass;
+    use ResolvesToolAuthorization;
     use ResolvesToolName;
     use ResolvesToolResponse;
     use ResolvesToolSchemas;
@@ -41,6 +43,7 @@ abstract class OrchestratorTool extends Tool implements ToolErrorResponseBuilder
     public function handle(Request $request): Response|ResponseFactory
     {
         $this->authorizeScope();
+        $this->authorizeUsingAttributes();
 
         try {
             $this->validateUsingRequestClass($request);

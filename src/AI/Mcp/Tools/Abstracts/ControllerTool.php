@@ -7,6 +7,7 @@ use Illuminate\Routing\Redirector;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ControllerToolInterface;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolErrorResponseBuilderInterface;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\NormalizesNullableSchemaTypes;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolAuthorization;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolName;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolResponse;
 use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers\ResolvesToolSchemas;
@@ -18,6 +19,7 @@ use Laravel\Mcp\Server\Tool;
 abstract class ControllerTool extends Tool implements ControllerToolInterface, ToolErrorResponseBuilderInterface
 {
     use NormalizesNullableSchemaTypes;
+    use ResolvesToolAuthorization;
     use ResolvesToolName;
     use ResolvesToolResponse;
     use ResolvesToolSchemas;

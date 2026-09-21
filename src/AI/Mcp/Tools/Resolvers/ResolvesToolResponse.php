@@ -131,6 +131,7 @@ trait ResolvesToolResponse
     {
         try {
             $this->authorizeScope();
+            $this->authorizeUsingAttributes();
 
             $response = $resolve();
 
