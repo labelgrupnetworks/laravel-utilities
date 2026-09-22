@@ -39,6 +39,7 @@ The package is automatically registered through Laravel's package discovery.
   - [Tool name resolution](#tool-name-resolution)
   - [Response & error mapping](#response--error-mapping)
   - [Scope authorization](#scope-authorization)
+  - [Authorize attribute](#authorize-attribute)
   - [Input/output schemas](#inputoutput-schemas)
   - [Tools schema catalog & version snapshot](#tools-schema-catalog--version-snapshot)
   - [Configuration](#configuration)
@@ -554,6 +555,7 @@ $brands_tool_name = BrandsListTool::toolName();
 Both bases use the `ResolvesToolResponse` trait, funneling every call through `respond(callable)`:
 
 - `authorizeScope()` runs first — throws `UnauthorizedException` if the Tool isn't `#[IsReadOnly]` and the caller lacks write access (see [Scope authorization](#scope-authorization));
+- `authorizeUsingAttributes()` runs next — runs every `#[Authorize]` declared on the Tool (see [Authorize attribute](#authorize-attribute));
 - the callable's return is normalised: `string` → text, `array` → structured (via the overridable `transformResponse()` hook), `JsonResponse` → mapped by HTTP status (`responseFromJsonResponse()`), anything else → `'Success'`;
 - any `Throwable` → `report($e)` + `errorResponse($e)`.
 
@@ -572,6 +574,38 @@ A consumer can add business exceptions to `exposed_exceptions` with zero code ch
 ### Scope authorization
 
 `shouldRegister()`/`authorizeScope()` gate writes: a Tool without `#[IsReadOnly]` requires write access; read-only tools are always listed and callable. Write access itself is resolved via `config('laravel-utilities.mcp.scope_authorizer')` — a class implementing `McpScopeAuthorizerInterface::canWrite(): bool`, bound in the consuming app's own container/config. This package has no opinion on *how* a consumer determines write access (token scopes, roles, anything else) — it only defines the interface and the resolution point. If unset, `canWrite()` defaults to unrestricted (`true`).
+
+### Authorize attribute
+
+`#[Authorize(SomeAuthorizerClass::class, ...$parameters)]` declares a business-level authorizer that must approve the current context before the Tool runs — a companion to [Scope authorization](#scope-authorization) (which only gates read/write MCP token scopes) for rules a consuming project needs to enforce itself (e.g. "only this role can run this tool", "this tool is restricted to a given tenant/warehouse").
+
+It's repeatable and inherited: every `#[Authorize]` on the Tool class or any of its parents runs, combined with AND — none is optional, and the first authorizer to throw stops execution before the Tool body runs. `ResolvesToolResponse::respond()` calls `authorizeUsingAttributes()` right after `authorizeScope()`, so both gates apply on every call.
+
+`$authorizer` must be a `class-string<ToolAuthorizerInterface>`; any extra constructor arguments become `$parameters`, forwarded verbatim to `authorize()`:
+
+```php
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Attributes\Authorize;
+use Labelgrup\LaravelUtilities\AI\Mcp\Tools\Interfaces\ToolAuthorizerInterface;
+use Laravel\Mcp\Server\Tool;
+
+class RequiresRoleAuthorizer implements ToolAuthorizerInterface
+{
+    public function authorize(Tool $tool, array $parameters): void
+    {
+        [$role] = $parameters;
+
+        abort_unless(auth()->user()?->hasRole($role), 403);
+    }
+}
+
+#[Authorize(RequiresRoleAuthorizer::class, 'warehouse-manager')]
+class AdjustStockTool extends UseCaseTool
+{
+    // ...
+}
+```
+
+`authorize(Tool $tool, array $parameters): void` receives the Tool instance being authorized plus the attribute's `$parameters`, and throws any `Throwable` to deny the call — it's caught and mapped the same way as any other exception raised inside `respond()` (see [Response & error mapping](#response--error-mapping)).
 
 ### Input/output schemas
 
