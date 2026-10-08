@@ -42,7 +42,8 @@ return [
         'rate_limit' => [
             // Max MCP requests per minute per client (route: RateLimiter::for('mcp', ...)).
             'per_minute' => env('MCP_RATE_LIMIT_PER_MINUTE', 60),
-
+            // Max MCP requests per minute per client (route: RateLimiter::for('mcp', ...)) for whitelisted IPs.
+            'per_minute_whitelist' => env('MCP_RATE_LIMIT_PER_MINUTE_WHITELIST', 1000),
             /**
              * IPs rate-limited by IP instead of by authenticated user id.
              */

@@ -84,7 +84,12 @@ class LaravelUtilitiesServiceProvider extends \Illuminate\Support\ServiceProvide
         RateLimiter::for('mcp', function (Request $request) {
             $max_attempts = (int) config('laravel-utilities.mcp.rate_limit.per_minute', 60);
             $whitelist_ips = (array) config('laravel-utilities.mcp.rate_limit.whitelist_ips', []);
-            $by = in_array($request->ip(), $whitelist_ips, true) ? $request->ip() : ($request->user()?->id ?? $request->ip());
+            $by = $request->user()?->id ?? $request->ip();
+
+            if (in_array($request->ip(), $whitelist_ips, true)) {
+                $by = $request->ip();
+                $max_attempts = (int) config('laravel-utilities.mcp.rate_limit.per_minute_whitelist', 1000);
+            }
 
             return Limit::perMinute($max_attempts)->by($by)->response(function () {
                 throw new CustomException(

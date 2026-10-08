@@ -15,35 +15,41 @@ composer require labelgrup/laravel-utilities
 The package is automatically registered through Laravel's package discovery.
 
 ## 📚 Table of Contents
-- [Commands](#-commands)
-  - [MakeApiRequest](#-makeapirequest)
-  - [MakeUseCase](#-makeusecase)
-- [Core Classes](#-core-classes)
-  - [ApiRequest](#apirequest)
-  - [UseCase & UseCaseInterface](#usecase--usecaseinterface)
-  - [UseCaseResponse](#usecaseresponse)
-- [CustomException](#-customexception)
-- [Helpers](#-helpers)
-  - [ApiResponse](#apiresponse)
-  - [ExceptionHandler](#exceptionhandler)
-  - [Image](#image)
-  - [Password](#password)
-  - [Text](#text)
-  - [Time](#time)
-  - [Zip](#zip)
-- [Validation Rules](#-validation-rules)
-  - [SlugRule](#slugrule)
-- [MCP Tools (`AI\Mcp`)](#-mcp-tools-aimcp)
-  - [Tool bases: ControllerTool & UseCaseTool](#tool-bases-controllertool--usecasetool)
-  - [OrchestratorTool](#orchestratortool)
-  - [Tool name resolution](#tool-name-resolution)
-  - [Response & error mapping](#response--error-mapping)
-  - [Scope authorization](#scope-authorization)
-  - [Authorize attribute](#authorize-attribute)
-  - [Input/output schemas](#inputoutput-schemas)
-  - [Tools schema catalog & version snapshot](#tools-schema-catalog--version-snapshot)
-  - [Configuration](#configuration)
-  - [Claude Code skills installer](#claude-code-skills-installer)
+- [Laravel Utilities 🛠️ ](#laravel-utilities-️-)
+  - [✅ Requirements](#-requirements)
+  - [📦 Installation](#-installation)
+  - [📚 Table of Contents](#-table-of-contents)
+  - [⚙️ Commands](#️-commands)
+    - [📝 MakeApiRequest](#-makeapirequest)
+    - [🧠 MakeUseCase](#-makeusecase)
+  - [🏗️ Core Classes](#️-core-classes)
+    - [ApiRequest](#apirequest)
+    - [UseCase \& UseCaseInterface](#usecase--usecaseinterface)
+    - [UseCaseResponse](#usecaseresponse)
+  - [❗ CustomException](#-customexception)
+  - [🔧 Helpers](#-helpers)
+    - [ApiResponse](#apiresponse)
+    - [ExceptionHandler](#exceptionhandler)
+    - [Image](#image)
+    - [Password](#password)
+    - [Text](#text)
+    - [Time](#time)
+    - [Zip](#zip)
+  - [🎯 Validation Rules](#-validation-rules)
+    - [SlugRule](#slugrule)
+  - [🤖 MCP Tools (`AI\Mcp`)](#-mcp-tools-aimcp)
+    - [Tool bases: ControllerTool \& UseCaseTool](#tool-bases-controllertool--usecasetool)
+    - [OrchestratorTool](#orchestratortool)
+    - [Tool name resolution](#tool-name-resolution)
+    - [Response \& error mapping](#response--error-mapping)
+    - [Scope authorization](#scope-authorization)
+    - [Authorize attribute](#authorize-attribute)
+    - [Input/output schemas](#inputoutput-schemas)
+    - [Tools schema catalog \& version snapshot](#tools-schema-catalog--version-snapshot)
+    - [Configuration](#configuration)
+    - [Claude Code skills installer](#claude-code-skills-installer)
+  - [📄 License](#-license)
+  - [👥 Authors](#-authors)
 
 ---
 
@@ -667,6 +673,7 @@ Publish the config with `php artisan vendor:publish --tag=laravel-utilities-conf
 
     'rate_limit' => [
         'per_minute' => env('MCP_RATE_LIMIT_PER_MINUTE', 60),
+        'per_minute_whitelist' => env('MCP_RATE_LIMIT_PER_MINUTE_WHITELIST', 1000),
         'whitelist_ips' => [],
     ],
 ],
