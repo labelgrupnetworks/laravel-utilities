@@ -23,6 +23,8 @@ trait ResolvesRequestClass
             return $request;
         }
 
+        $this->dropBlankStrings($request);
+
         $class = $request_class->class;
 
         $form_request = $class::create('/', 'GET', $request->all());
@@ -30,6 +32,14 @@ trait ResolvesRequestClass
         $form_request->validateResolved();
 
         return $form_request;
+    }
+
+    private function dropBlankStrings(Request $request): void
+    {
+        $request->setArguments(array_filter(
+            $request->all(),
+            fn (mixed $value) => !is_string($value) || trim($value) !== ''
+        ));
     }
 
     private function requestClassAttribute(): ?RequestClass
@@ -46,6 +56,8 @@ trait ResolvesRequestClass
         if (!$request_class) {
             return;
         }
+
+        $this->dropBlankStrings($request);
 
         $class = $request_class->class;
 
