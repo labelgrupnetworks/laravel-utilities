@@ -3,6 +3,7 @@
 namespace Labelgrup\LaravelUtilities\AI\Mcp\Tools\Resolvers;
 
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -35,6 +36,8 @@ trait FormatsValidationFailure
         'Size' => 'must be exactly :param',
         'In' => 'must be one of: :param',
         'NotIn' => 'must not be one of: :param',
+        'Enum' => 'must be one of the allowed values',
+        Enum::class => 'must be one of the allowed values',
         'Exists' => 'does not match any known value',
         'Distinct' => 'contains a duplicate value',
         'Confirmed' => 'confirmation does not match',
@@ -44,13 +47,30 @@ trait FormatsValidationFailure
 
     protected function formatValidationFailure(ValidationException $exception): string
     {
+        $errors = $exception->errors();
+
         return collect($exception->validator->failed())
-            ->map(fn (array $rules, string $field) => "{$field} " . implode(', ', array_map(
-                fn (string $rule, array $parameters) => $this->describeFailedRule($rule, $parameters),
-                array_keys($rules),
-                array_values($rules)
-            )))
+            ->map(fn (array $rules, string $field) => "{$field} " . $this->describeFieldFailure($rules, $errors[$field] ?? []))
             ->implode('; ');
+    }
+
+    /**
+     * @param  array<string, array<int, string>>  $rules
+     * @param  array<int, string>  $messages
+     */
+    private function describeFieldFailure(array $rules, array $messages): string
+    {
+        $has_unknown_rule = count(array_diff_key($rules, self::RULE_MESSAGES)) > 0;
+
+        if ($has_unknown_rule && $messages !== [] && ! $this->hasUntranslatedMessage($messages)) {
+            return implode(', ', $messages);
+        }
+
+        return implode(', ', array_map(
+            fn (string $rule, array $parameters) => $this->describeFailedRule($rule, $parameters),
+            array_keys($rules),
+            array_values($rules)
+        ));
     }
 
     /**
@@ -61,5 +81,19 @@ trait FormatsValidationFailure
         $template = self::RULE_MESSAGES[$rule] ?? "failed the '" . Str::snake($rule) . "' rule";
 
         return str_replace(':param', implode(', ', $parameters), $template);
+    }
+
+    /**
+     * @param  array<int, string>  $messages
+     */
+    private function hasUntranslatedMessage(array $messages): bool
+    {
+        foreach ($messages as $message) {
+            if (str_starts_with($message, 'validation.')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
